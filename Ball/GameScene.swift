@@ -14,28 +14,60 @@ enum GameState {
     case Ready, Dropping, Pass, Failed, GameOverPass, GameOverFailed
 }
 
-let objNames: [String: String] = [
-    "ball": "The ball",
-    "stick": "Stick",
-    "shortStick": "Short stick",
-    "bounce": "Bounce"
-]
-
-// 1 is rotation only, 2 is function only
-let objRF: [String: Int] = [
-    "stick": 3,
-    "shortStick": 2,
-    "bounce": 3
+// RF: 1 is rotation only, 2 is function only
+let objs: [String: [String: String]] = [
+    "bounceR": [
+        "halfWidth": "21",
+        "rf": "1",
+        "name": "Bounce"
+    ],
+    "bounceF": [
+        "halfWidth": "21",
+        "rf": "2",
+        "name": "Bounce"
+    ],
+    "bounceRF": [
+        "halfWidth": "21",
+        "rf": "3",
+        "name": "Bounce"
+    ],
+    "ball": [
+        "halfWidth": "19",
+        "rf": "0",
+        "name": "The ball"
+    ],
+    "shortStick": [
+        "halfWidth": "48",
+        "rf": "2",
+        "name": "Short stick"
+    ],
+    "bounce": [
+        "halfWidth": "21",
+        "rf": "0",
+        "name": "Bounce"
+    ],
+    "stick": [
+        "halfWidth": "42",
+        "rf": "3",
+        "name": "Stick"
+    ]
 ]
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
+    let pai = CGFloat(M_PI)
     let screenWidth: CGFloat = 375
     let screenHeidht: CGFloat = 667
     let menuHeight: CGFloat = 65
     let ballRadius: CGFloat = 19
     
-    var state: GameState = .Ready
+    var state: GameState = .Ready {
+        didSet {
+            if state == .GameOverPass {
+                defaults.setBool(true, forKey: "pass\(nowLevelNum)")
+            }
+        }
+    }
     
     var ballNode: Ball!
     var levelNode: SKNode!
@@ -45,22 +77,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         didSet {
             lastTouchLocation = nowNode.position
             lastTouchNodeLocation = nowNode.position
-            objNameLabel.text = objNames[nowNode.name!]
+            objNameLabel.text = objs[nowNode.name!]!["name"]!
             let tt = SKTexture(imageNamed: "\(nowNode.name!)Icon")
             objIconNode.size = tt.size()
             objIconNode.texture = tt
             nowNodeIndex = objNodeIndex[nowNode.name!]!
             
-            rotationNode.removeFromParent()
-            functionNode.removeFromParent()
-            nowNode.addChild(rotationNode)
-            nowNode.addChild(functionNode)
-            if nowNode == ballNode {
-                rotationNode.hidden = true
-                functionNode.hidden = true
-            } else {
-                updateRF()
-            }
+            rotationNode.removeAllActions()
+            functionNode.removeAllActions()
+            rotationNode.alpha = 0
+            functionNode.alpha = 0
+
+            updateRF()
         }
     }
     var menuNode: SKSpriteNode!
@@ -76,6 +104,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var levelNumLabel: SKLabelNode!
     var rotationNode: SKSpriteNode!
     var functionNode: SKSpriteNode!
+    var obstacleLayer: SKNode?
     
     var defaults: NSUserDefaults!
     
@@ -85,16 +114,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var pastStaticTime: CFTimeInterval = 0
     var staticTime: CFTimeInterval = 0 // if the ball is static for more than 1s, game over
     //var currentTimeStamp: CFTimeInterval = 0
-    
     var pastTimeStart: CFTimeInterval = 0
     var pastTime: CFTimeInterval = 0
-    var bestTime: Double = 0
+    var bestTime: Double = 0 {
+        didSet {
+            bestTimeLabel.text = String.init(format: "Best: %.3f", bestTime)
+        }
+    }
     var nowLevelNum: Int = 0
     var nowNodeIndex = 0
     var objNodeIndex = [String: Int]()
     
     var multiTouching = false
     var touched = false
+    
+    var startRotation = false
+    var startFunction = false
+    var startZR: CGFloat!
+    var startPos: CGPoint!
     
     override func didMoveToView(view: SKView) {
         
@@ -110,10 +147,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ballNode = self.childNodeWithName("ball") as! Ball
         levelNode = self.childNodeWithName("levelNode")
         if levelNode.children.count == 0 {
-            let levelPath = NSBundle.mainBundle().pathForResource("Level0", ofType: "sks")
+            let n = 3
+            let levelPath = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks")
             let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: levelPath!))
-            newLevel.name = "level0"
-            nowLevelNum = 0
+            newLevel.name = "level\(n)"
+            nowLevelNum = n
             levelNode.addChild(newLevel)
         }
         menuNode = self.childNodeWithName("menu") as! SKSpriteNode
@@ -128,6 +166,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         levelNumLabel = self.childNodeWithName("levelNumLabel") as! SKLabelNode
         rotationNode = self.childNodeWithName("rotation") as! SKSpriteNode
         functionNode = self.childNodeWithName("function") as! SKSpriteNode
+        obstacleLayer = levelNode.childNodeWithName("//obstacleLayer")
         
         objNodeIndex["ball"] = 0
         initGame()
@@ -149,11 +188,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 self.gameOverNext()
             } else if self.state == .Ready {
                 if self.isBallInArea(self.startNode, hard: true) {
+                    //self.objNodes.children.obj.children.first!.children.first!.children
                     self.ballNode.physicsBody?.affectedByGravity = true
                     self.state = .Dropping
                     self.nowNode = self.ballNode
                     self.nowNodeIndex = 0
-                    //self.objNodes.children.obj.children.first!.children.first!.children
+                    if let obstacleLayer = self.obstacleLayer {
+                        self.levelNode.addChild(obstacleLayer)
+                    }
                 }
             }
         }
@@ -182,17 +224,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             case 1:
                 multiTouching = false
                 disableMultiTouch()
-                rotationNode.hidden = true
-                functionNode.hidden = true
                 for touch in touches {
                     let location = touch.locationInNode(self)
                     let node = nodeAtPoint(location)
                     if node.name == nil {
                         print("node name is nil \(node)")
                         return
+                    } else if node == rotationNode || node == functionNode ||
+                        functionNode == node.parent || rotationNode == node.parent {
+                        if node == rotationNode || rotationNode == node.parent {
+                            startRotation = true
+                            startZR = nowNode.zRotation
+                        } else {
+                            startFunction = true
+                            startPos = location
+                        }
+                    } else {
+                        lastTouchLocation = location
+                        rotationNode.runAction(SKAction(named: "fadeOut")!)
+                        functionNode.runAction(SKAction(named: "fadeOut")!)
                     }
-                    
-                    lastTouchLocation = location
                 }
             case 2:
                 multiTouching = true
@@ -220,8 +271,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if !multiTouching {
                     for touch in touches {
                         let location = touch.locationInNode(self)
-                        let pos = location + lastTouchNodeLocation - lastTouchLocation
-                        nowNode.position = pos
+                        if startRotation || startFunction {
+                            if startRotation {
+                                let dy = nowNode.position.y - location.y
+                                let dx = nowNode.position.x - location.x
+                                let angle = startZR + atan2(dy, dx)
+                                nowNode.zRotation = angle % (pai * 2)
+
+                                rotationNode.position = location
+                            } else {
+                                let d = location.y - functionNode.position.y
+                                for child in nowNode.children {
+                                    if child.physicsBody?.categoryBitMask == 2 {
+                                        if let bounce = child as? Bounce {
+                                            if bounce.k < bounce.kMax && bounce.k > bounce.kMin {
+                                                if d > 0 {
+                                                    bounce.k += 0.01
+                                                } else if d < 0 {
+                                                    bounce.k -= 0.01
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                functionNode.position = location
+                            }
+                        } else {
+                            let pos = location + lastTouchNodeLocation - lastTouchLocation
+                            nowNode.position = pos
+                        }
                     }
                 }
             case 2:
@@ -249,12 +328,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             switch count {
             case 1:
-                updateRF()
                 for touch in touches {
                     let location = touch.locationInNode(self)
                     let node = nodeAtPoint(location)
                     print(node.name! ?? "nil")
                 }
+                updateRF()
             case 2:
                 for touch in touches {
                     let location = touch.locationInNode(self)
@@ -289,6 +368,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             break
         }
         touched = false
+        startFunction = false
+        startRotation = false
         enableMultiTouch()
     }
     
@@ -299,7 +380,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
         //currentTimeStamp = currentTime
-        
+
         switch state {
         case .Ready:
             var pos = ballNode.position
@@ -412,13 +493,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func gameOverNext() -> Void {
         menuNode.runAction(SKAction(named: "menuMoveDown")!)
-        if nowLevelNum < levelNum - 1 {
-            nowLevelNum += (state == .GameOverPass ? 1 : 0)
-            restart(nowLevelNum)
-            state = .Ready
-        } else {
-            passedAllLevels()
+        if state == .GameOverPass {
+            if nowLevelNum == levelNum - 1 {
+                passedAllLevels()
+                return
+            } else {
+                nowLevelNum += 1
+            }
         }
+        restart(nowLevelNum)
+        state = .Ready
     }
     
     func enableMultiTouch() -> Void {
@@ -461,14 +545,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         nowNode = ballNode
         nowNodeIndex = 0
         
+        rotationNode.alpha = 0
+        functionNode.alpha = 0
+        
         bestTimeScore()
         timeLabel.text = "0.000"
         objNodes = levelNode.childNodeWithName("//objNodes")
         startNode = levelNode.childNodeWithName("//start") as! SKSpriteNode
         endNode = levelNode.childNodeWithName("//end") as! SKSpriteNode
+        obstacleLayer = levelNode.childNodeWithName("//obstacleLayer")
+        obstacleLayer?.removeFromParent()
+        
         var n = 1
         for obj in objNodes.children {
-            objNodeIndex[obj.name!] = n
+            objNodeIndex[obj.children.first!.children.first!.name!] = n
             let pos = obj.position
             obj.position = CGPoint(x: 0, y: 0)
             obj.children.first!.children.first!.position = pos
@@ -477,136 +567,179 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func passedAllLevels() -> Void {
+        defaults.setBool(true, forKey: "passedAll")
         if let scene = Home(fileNamed: "Home") {
             let skView = self.view as SKView!
             /* Sprite Kit applies additional optimizations to improve rendering performance */
             skView.ignoresSiblingOrder = true
             scene.scaleMode = .AspectFill
+            scene.fromGameScenePassedAll = true
             skView.presentScene(scene)
         }
     }
     
     func bestTimeScore() -> Void {
-        bestTime = defaults.doubleForKey("\(nowLevelNum)")
+        bestTime = defaults.doubleForKey("best\(nowLevelNum)") ?? 0
         if pastTime > 0 && Double(pastTime) < bestTime || bestTime == 0 {
             bestTime = Double(pastTime)
         }
-        defaults.setDouble(bestTime, forKey: "\(nowLevelNum)")
-        bestTimeLabel.text = String.init(format: "Best: %.3f", bestTime)
+        defaults.setDouble(bestTime, forKey: "best\(nowLevelNum)")
+        defaults.synchronize()
     }
     
-    func angleToRadian(angle: Double) -> CGFloat {
-        return CGFloat(M_PI * angle / 180.0)
+    func angleToRadian(angle: CGFloat) -> CGFloat {
+        return pai * angle / 180.0
+    }
+    
+    func radianToAngle(radian: CGFloat) -> CGFloat {
+        return radian * 180.0 / pai % 360
     }
     
     func updateRF() -> Void {
-        if let rf = objRF[nowNode.name!] {
+
+        var name = nowNode.parent?.parent?.name
+        if nowNode == ballNode {
+            name = "ball"
+        }
+        
+        if let rf = Int(objs[name!]!["rf"]!) {
             let r = rf == 1 || rf == 3
             let f = rf > 1
-            
-            rotationNode.hidden = !r
-            functionNode.hidden = !f
-            
+
             let c: CGFloat = 100
-            let d: CGFloat = 52
+            let d = CGFloat(Int(objs[nowNode.name!]!["halfWidth"]!)!) + 27
             let pos = nowNode.position
-            var rPos = CGPoint(x: 0, y: 0)
-            var fPos = CGPoint(x: 0, y: 0)
+            var rPos = CGPoint(x: pos.x, y: pos.y)
+            var fPos = CGPoint(x: pos.x, y: pos.y)
             
             if r && f {
+                // both icons show
                 if pos.x > 0 && pos.x < screenWidth && pos.y > menuHeight && pos.y < screenHeidht {
-                    if pos.x > c && pos.x < screenWidth - c && pos.y > c && pos.y < screenHeidht - c {
-                        rPos.x = d
-                        fPos.x = -d
+                    // inside screen
+                    if pos.x > c && pos.x < screenWidth - c && pos.y > c && pos.y < screenHeidht - c / 2 {
+                        // centre
+                        rPos.x += d
+                        fPos.x += -d
                     } else if pos.x <= screenWidth / 2 && pos.y <= screenHeidht / 2 {
-                        rPos.x = d
-                        rPos.y = d / 3
-                        fPos.x = d / 3
-                        fPos.y = d
+                        // bottom left
+                        rPos.x += d
+                        rPos.y += d / 3
+                        fPos.x += d / 3
+                        fPos.y += d
                     } else if pos.x >= screenWidth / 2 && pos.y <= screenHeidht / 2 {
-                        rPos.x = -d
-                        rPos.y = d / 3
-                        fPos.x = -d / 3
-                        fPos.y = d
+                        // bottom right
+                        rPos.x += -d
+                        rPos.y += d / 3
+                        fPos.x += -d / 3
+                        fPos.y += d
                     } else if pos.x <= screenWidth / 2 && pos.y >= screenHeidht / 2 {
-                        rPos.x = d
-                        rPos.y = -d / 3
-                        fPos.x = d / 3
-                        fPos.y = -d
+                        // top left
+                        rPos.x += d
+                        rPos.y += -d / 3
+                        fPos.x += d / 3
+                        fPos.y += -d
                     } else if pos.x >= screenWidth / 2 && pos.y >= screenHeidht / 2 {
-                        rPos.x = -d
-                        rPos.y = -d / 3
-                        fPos.x = -d / 3
-                        fPos.y = -d
+                        // top right
+                        rPos.x += -d
+                        rPos.y += -d / 3
+                        fPos.x += -d / 3
+                        fPos.y += -d
                     }
                 } else if pos.y > menuHeight && pos.y < screenHeidht {
+                    // top and bottom inside, left and right outside
                     if pos.x <= 0 {
-                        rPos.x = d * 1.5
-                        fPos.x = d * 1.5
+                        // left outside
+                        rPos.x += d * 1.5
+                        fPos.x += d * 1.5
                     } else if pos.x >= screenWidth {
-                        rPos.x = -d * 1.5
-                        fPos.x = -d * 1.5
+                        // right outside
+                        rPos.x += -d * 1.5
+                        fPos.x += -d * 1.5
                     }
                     if pos.y < d + menuHeight {
-                        rPos.y = d
-                        fPos.y = d / 3
+                        // bottom inside, nearly border corner
+                        rPos.y += d
+                        fPos.y += d / 3
                     } else if pos.y > screenHeidht - d {
-                        rPos.y = -d / 3
-                        fPos.y = -d
+                        // top inside, nearly border corner
+                        rPos.y += -d / 3
+                        fPos.y += -d
                     } else {
-                        rPos.y = d / 3
-                        fPos.y = -d / 3
+                        // centre area, away from border corner
+                        rPos.y += d / 3
+                        fPos.y += -d / 3
                     }
                 } else if pos.x > 0 && pos.x < screenWidth {
+                    // left and right inside, top and bottom outside
                     if pos.y <= menuHeight {
-                        rPos.y = d * 1.5
-                        fPos.y = d * 1.5
+                        // bottom outside
+                        rPos.y += d * 1.5
+                        fPos.y += d * 1.5
                     } else if pos.y >= screenHeidht {
-                        rPos.y = -d * 1.5
-                        fPos.y = -d * 1.5
+                        // top outside
+                        rPos.y += -d * 1.5
+                        fPos.y += -d * 1.5
                     }
                     if pos.x < d {
-                        rPos.x = d
-                        fPos.x = d / 3
+                        // left inside but nearly border corner
+                        rPos.x += d
+                        fPos.x += d / 3
                     } else if pos.x > screenWidth - d {
-                        rPos.x = -d / 3
-                        fPos.x = -d
+                        // right inside but nearly border corner
+                        rPos.x += -d / 3
+                        fPos.x += -d
                     } else {
-                        rPos.x = d / 3
-                        fPos.x = -d / 3
+                        // centre area, away from border corner
+                        rPos.x += d / 3
+                        fPos.x += -d / 3
                     }
                 }
             } else if (r && !f) || (!r && f) {
+                // one icon shows
                 if pos.x < 284 {
+                    // left side
                     if pos.y > screenHeidht - c {
-                        rPos.x = d / 2
-                        fPos.x = d / 2
-                        rPos.y = -d
-                        fPos.y = -d
+                        // top
+                        rPos.x += d / 2
+                        fPos.x += d / 2
+                        rPos.y += -d
+                        fPos.y += -d
                     } else if pos.y < c {
-                        rPos.x = d / 2
-                        fPos.x = d / 2
-                        rPos.y = d
-                        fPos.y = d
+                        // bottom
+                        rPos.x += d / 2
+                        fPos.x += d / 2
+                        rPos.y += d
+                        fPos.y += d
                     } else {
-                        rPos.x = d
-                        fPos.x = d
+                        // centre
+                        rPos.x += d
+                        fPos.x += d
                     }
                 } else if pos.y > screenHeidht / 2 {
-                    rPos.x = -d / 2
-                    fPos.x = -d / 2
-                    rPos.y = -d
-                    fPos.y = -d
+                    // top right side
+                    rPos.x += -d / 2
+                    fPos.x += -d / 2
+                    rPos.y += -d
+                    fPos.y += -d
                 } else {
-                    rPos.x = -d / 2
-                    fPos.x = -d / 2
-                    rPos.y = d
-                    fPos.y = d
+                    // bottom right side
+                    rPos.x += -d / 2
+                    fPos.x += -d / 2
+                    rPos.y += d
+                    fPos.y += d
                 }
             }
             
             rotationNode.position = rPos
             functionNode.position = fPos
+
+            if r {
+                rotationNode.runAction(SKAction(named: "fadeIn")!)
+            }
+            if f {
+                functionNode.runAction(SKAction(named: "fadeIn")!)
+            }
+
         }
     }
     

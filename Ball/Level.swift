@@ -23,7 +23,11 @@ class Level: SKScene {
     var buttonHome: MSButtonNode!
     var buttonHelp: MSButtonNode!
     
+    var defaults: NSUserDefaults!
+    
     override func didMoveToView(view: SKView) {
+        
+        defaults = NSUserDefaults.standardUserDefaults()
         
         homeNode = childNodeWithName("homeNode")!
         menuNode = childNodeWithName("menu") as! SKSpriteNode
@@ -31,8 +35,21 @@ class Level: SKScene {
         buttonHome = menuNode.childNodeWithName("buttonHome") as! MSButtonNode
         buttonHelp = menuNode.childNodeWithName("buttonHelp") as! MSButtonNode
         
-        for n in 0..<levelNum {
-            levels[n] = self.childNodeWithName("level\(n)") as! SKLabelNode
+        if defaults.boolForKey("passedAll") {
+            for n in 0..<levelNum {
+                let levelName = "level\(n)"
+                levels[n] = self.childNodeWithName(levelName) as! SKLabelNode
+            }
+        } else {
+            for n in 0..<levelNum {
+                levels[n] = self.childNodeWithName("level\(n)") as! SKLabelNode
+                
+                if defaults.boolForKey("pass\(n)") {
+                    
+                } else {
+                    
+                }
+            }
         }
         
         buttonHome.selectedHandler = {
@@ -54,24 +71,10 @@ class Level: SKScene {
             let node = nodeAtPoint(touch.locationInNode(self))
             for n in 0..<levelNum {
                 if node.name == "level\(n)" {
-                    let scene = GameScene(fileNamed: "GameScene") as GameScene!
-                    let skView = self.view as SKView!
-
-                    /* Sprite Kit applies additional optimizations to improve rendering performance */
-                    skView.ignoresSiblingOrder = true
-
-                    /* Set the scale mode to scale to fit the window */
-                    scene.scaleMode = .AspectFill
-                    
-                    let path = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks")
-                    let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: path!))
-                    newLevel.name = node.name!
-                    scene.childNodeWithName("levelNode")!.addChild(newLevel)
-                    scene.nowLevelNum = n
-
-                    skView.presentScene(scene)
-                    chosen = true
-                    break
+                    if n == 0 || defaults.boolForKey("pass\(n)") || defaults.boolForKey("pass\(n - 1)") {
+                        moveToLevelN(n, name: node.name!)
+                        break
+                    }
                 }
             }
         }
@@ -91,5 +94,25 @@ class Level: SKScene {
     
     func showHelp() -> Void {
         
+    }
+    
+    func moveToLevelN(n: Int, name: String!) -> Void {
+        let scene = GameScene(fileNamed: "GameScene") as GameScene!
+        let skView = self.view as SKView!
+        
+        /* Sprite Kit applies additional optimizations to improve rendering performance */
+        skView.ignoresSiblingOrder = true
+        
+        /* Set the scale mode to scale to fit the window */
+        scene.scaleMode = .AspectFill
+        
+        let path = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks")
+        let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: path!))
+        newLevel.name = name
+        scene.childNodeWithName("levelNode")!.addChild(newLevel)
+        scene.nowLevelNum = n
+        
+        skView.presentScene(scene)
+        chosen = true
     }
 }

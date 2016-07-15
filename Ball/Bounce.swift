@@ -12,7 +12,7 @@ class Bounce: TheObjects {
     
     let objName = "Bounce"
     let kMin: CGFloat = 0.32
-    let kMax: CGFloat = 0.84
+    let kMax: CGFloat = 1.24
     
     var k: CGFloat = 0.5
     

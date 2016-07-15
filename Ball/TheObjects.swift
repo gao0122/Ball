@@ -15,9 +15,11 @@ class TheObjects: SKSpriteNode {
         switch gameScene.state {
         case .Ready:
             if touches.count == 1 {
-                gameScene.nowNode = self.parent!
-                gameScene.rotationNode.hidden = true
-                gameScene.functionNode.hidden = true
+                gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                if gameScene.nowNode != self.parent! {
+                    gameScene.nowNode = self.parent!
+                }
             }
         case .Dropping:
             break
@@ -34,6 +36,8 @@ class TheObjects: SKSpriteNode {
             case .Ready:
                 if touches.count == 1 {
                     gameScene.disableMultiTouch()
+                    gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                    gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
                     for touch in touches {
                         // self.parent!.parent!.parent is the SKReferenceNode in GameScene
                         self.parent!.position = touch.locationInNode(self.parent!.parent!)

@@ -14,14 +14,21 @@ class Home: SKScene {
     let screenWidth:CGFloat = 375
     
     var defaults: NSUserDefaults!
-    var hasPlayed = true
+    
     var buttonPlay: SKLabelNode!
+    
+    var hasPlayed = true
+    var fromGameScenePassedAll = false
     
     override func didMoveToView(view: SKView) {
         defaults = NSUserDefaults.standardUserDefaults()
         hasPlayed = defaults.boolForKey("hasPlayed")
         
         buttonPlay = childNodeWithName("buttonPlay") as! SKLabelNode
+        
+        if fromGameScenePassedAll {
+            //print("passed all!")
+        }
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {

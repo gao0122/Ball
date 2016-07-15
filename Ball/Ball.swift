@@ -17,9 +17,11 @@ class Ball: SKSpriteNode {
         switch gameScene.state {
         case .Ready:
             if touches.count == 1 {
-                gameScene.nowNode = self
-                gameScene.rotationNode.hidden = true
-                gameScene.functionNode.hidden = true
+                gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                if gameScene.nowNode != self {
+                    gameScene.nowNode = self
+                }
             }
         case .Dropping:
             break
@@ -35,6 +37,8 @@ class Ball: SKSpriteNode {
             case .Ready:
                 if touches.count == 1 {
                     gameScene.disableMultiTouch()
+                    gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                    gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
                     for touch in touches {
                         self.position = touch.locationInNode(gameScene)
                     }
