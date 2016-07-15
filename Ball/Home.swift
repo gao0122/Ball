@@ -17,12 +17,10 @@ class Home: SKScene {
     
     var buttonPlay: SKLabelNode!
     
-    var hasPlayed = true
     var fromGameScenePassedAll = false
     
     override func didMoveToView(view: SKView) {
         defaults = NSUserDefaults.standardUserDefaults()
-        hasPlayed = defaults.boolForKey("hasPlayed")
         
         buttonPlay = childNodeWithName("buttonPlay") as! SKLabelNode
         
@@ -35,12 +33,8 @@ class Home: SKScene {
         for touch in touches {
             let node = nodeAtPoint(touch.locationInNode(self))
             if node.name == "buttonPlay" {
-                if hasPlayed {
-                    moveToLevelScene()
-                } else {
-                    // goto beginner level
-                    
-                }
+                // goto beginner level
+                moveToLevelScene()
             }
         }
     }

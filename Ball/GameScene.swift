@@ -34,21 +34,31 @@ let objs: [String: [String: String]] = [
     "ball": [
         "halfWidth": "19",
         "rf": "0",
+        "categoryBm": "1",
         "name": "The ball"
+    ],
+    "shortStickM": [
+        "halfWidth": "48",
+        "rf": "2",
+        "categoryBm": "4",
+        "name": "Short stick"
     ],
     "shortStick": [
         "halfWidth": "48",
-        "rf": "2",
+        "rf": "0",
+        "categoryBm": "4",
         "name": "Short stick"
     ],
     "bounce": [
         "halfWidth": "21",
         "rf": "0",
+        "categoryBm": "2",
         "name": "Bounce"
     ],
     "stick": [
         "halfWidth": "42",
         "rf": "3",
+        "categoryBm": "8",
         "name": "Stick"
     ]
 ]
@@ -133,15 +143,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var startZR: CGFloat!
     var startPos: CGPoint!
     
+    var ballMovingHitWall = false
+    
     override func didMoveToView(view: SKView) {
         
         /* Setup your scene here */
         physicsWorld.contactDelegate = self
         enableMultiTouch()
         defaults = NSUserDefaults.standardUserDefaults()
-        if !defaults.boolForKey("hasPlayed") {
-            defaults.setBool(true, forKey: "hasPlayed")
-        }
         
         // node connection
         ballNode = self.childNodeWithName("ball") as! Ball
@@ -234,9 +243,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         functionNode == node.parent || rotationNode == node.parent {
                         if node == rotationNode || rotationNode == node.parent {
                             startRotation = true
+                            functionNode.runAction(SKAction(named: "fadeOut")!)
                             startZR = nowNode.zRotation
                         } else {
                             startFunction = true
+                            rotationNode.runAction(SKAction(named: "fadeOut")!)
                             startPos = location
                         }
                     } else {
@@ -280,17 +291,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
                                 rotationNode.position = location
                             } else {
-                                let d = location.y - functionNode.position.y
+                                let dy = location.y - functionNode.position.y
+                                let dx = location.x - functionNode.position.x
                                 for child in nowNode.children {
-                                    if child.physicsBody?.categoryBitMask == 2 {
-                                        if let bounce = child as? Bounce {
-                                            if bounce.k < bounce.kMax && bounce.k > bounce.kMin {
-                                                if d > 0 {
-                                                    bounce.k += 0.01
-                                                } else if d < 0 {
-                                                    bounce.k -= 0.01
+                                    if let bm = child.physicsBody?.categoryBitMask {
+                                        switch Int(bm) {
+                                        case 2:
+                                            if let bounce = child as? Bounce {
+                                                if bounce.k < bounce.kMax && dy > 0 {
+                                                        bounce.k += 0.01
+                                                } else if bounce.k > bounce.kMin && dy < 0 {
+                                                        bounce.k -= 0.01
                                                 }
                                             }
+                                        case 4:
+                                            if let shortStick = child as? ShortStick {
+                                                if location.x < screenWidth / 2 {
+                                                    shortStick.direction = "left"
+                                                    nowNode.runAction(SKAction.rotateToAngle(angleToRadian(60), duration: 0.21))
+                                                } else {
+                                                    shortStick.direction = "right"
+                                                    nowNode.runAction(SKAction.rotateToAngle(0, duration: 0.21))
+                                                }
+                                            }
+                                        case 8:
+                                            if let stick = child as? Stick {
+                                                if nowNode.xScale < stick.lenMax && dx > 0 {
+                                                    nowNode.xScale += 0.02
+                                                } else if nowNode.xScale > stick.lenMin && dx < 0 {
+                                                    nowNode.xScale -= 0.02
+                                                }
+                                            }
+                                        default:
+                                            break
                                         }
                                     }
                                 }
@@ -298,7 +331,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                                 functionNode.position = location
                             }
                         } else {
-                            let pos = location + lastTouchNodeLocation - lastTouchLocation
+                            var pos = location + lastTouchNodeLocation - lastTouchLocation
+                            if nowNode == ballNode {
+                                if pos.x <= ballRadius || pos.x >= screenWidth - ballRadius ||
+                                    pos.y >= screenHeidht - ballRadius || pos.y <= menuHeight + ballRadius {
+
+                                    lastTouchNodeLocation = nowNode.position
+                                    pos = location + lastTouchNodeLocation - lastTouchLocation
+                                    lastTouchLocation = location
+                                    
+                                    // preventing first hitwall the ball position will change a lot by lastTouchLocation's big change
+                                    if !ballMovingHitWall {
+                                        pos = ballNode.position
+                                    }
+
+                                    pos.x = pos.x <= ballRadius ? ballRadius : pos.x
+                                    pos.x = pos.x >= screenWidth - ballRadius ? screenWidth - ballRadius : pos.x
+                                    pos.y = pos.y >= screenHeidht - ballRadius ? screenHeidht - ballRadius : pos.y
+                                    pos.y = pos.y <= menuHeight + ballRadius ? menuHeight + ballRadius : pos.y
+                                    ballMovingHitWall = true
+                                } else {
+                                    ballMovingHitWall = false
+                                }
+                            }
                             nowNode.position = pos
                         }
                     }
@@ -384,8 +439,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         switch state {
         case .Ready:
             var pos = ballNode.position
-            pos.x = pos.x <= 1 ? 1 : pos.x
-            pos.x = pos.x >= screenWidth - 1 ? screenWidth - 1 : pos.x
+            pos.x = pos.x <= ballRadius ? ballRadius : pos.x
+            pos.x = pos.x >= screenWidth - ballRadius ? screenWidth - ballRadius : pos.x
             pos.y = pos.y >= screenHeidht - ballRadius ? screenHeidht - ballRadius : pos.y
             pos.y = pos.y <= menuHeight + ballRadius ? menuHeight + ballRadius : pos.y
             ballNode.position = pos

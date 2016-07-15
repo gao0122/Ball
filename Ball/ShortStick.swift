@@ -11,7 +11,9 @@ import SpriteKit
 class ShortStick: TheObjects {
     
     let objName = "Short stick"
-        
+    
+    var direction = "right"
+    
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         userInteractionEnabled = true

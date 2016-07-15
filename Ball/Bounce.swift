@@ -11,10 +11,11 @@ import SpriteKit
 class Bounce: TheObjects {
     
     let objName = "Bounce"
-    let kMin: CGFloat = 0.32
-    let kMax: CGFloat = 1.24
     
-    var k: CGFloat = 0.5
+    let kMin: CGFloat = 0.37
+    let kMax: CGFloat = 1.48
+    
+    var k: CGFloat = 0.6
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
