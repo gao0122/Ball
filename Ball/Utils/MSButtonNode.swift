@@ -35,7 +35,7 @@ class MSButtonNode: SKSpriteNode {
                 break
             case .MSButtonNodeStateSelected:
                 // become larger
-
+                
                 break
             case .MSButtonNodeStateHidden:
                 /* Disable touch */
@@ -56,37 +56,52 @@ class MSButtonNode: SKSpriteNode {
         
         /* Enable touch on button node */
         self.userInteractionEnabled = true
+        
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         state = .MSButtonNodeStateSelected
         clickable = true
         longTouched = false
+        if let name = self.name {
+            if name == "objIcon" {
+                if let scene = self.scene as? GameScene {
+                    scene.objIconTouchBeganTime = touches.first!.timestamp
+                }
+            }
+        }
     }
-
+    
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         clickable = false
     }
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if clickable {
-            selectedHandler()
-            state = .MSButtonNodeStateActive
+            if !longTouched {
+                if let scene = self.scene as? GameScene {
+                    scene.objIconTouchBeganTime = nil
+                    selectedHandler()
+                    state = .MSButtonNodeStateActive
+                }
+            }
         }
     }
-
-    func objIconLongPress(sender: UILongPressGestureRecognizer) -> Void {
+    
+    func objIconLongPress() -> Void {
         clickable = false
-        if !longTouched {
-            if let scene = self.scene as? GameScene {
-                if !scene.touched {
-                    // iconLongPressAction
-                    scene.nowNode.runAction(SKAction(named: "scaleToFocus")!)
-                }
-                scene.touched = false
+        if let scene = self.scene as? GameScene {
+            if !scene.touched {
+                // iconLongPressAction
+                let pos = CGPoint(x: scene.screenWidth / 2, y: scene.screenHeidht / 2 + 40)
+                scene.nowNode.position = pos
+                scene.lastTouchNodeLocation = pos
+                scene.updateRF()
+                scene.nowNode.runAction(SKAction(named: "scaleToFocus")!)
             }
-            longTouched = true
-        }
+            scene.touched = false
+            longTouched = false
+        }   
     }
     
 }

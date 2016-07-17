@@ -12,7 +12,7 @@ class ShortStick: TheObjects {
     
     let objName = "Short stick"
     
-    var direction = "right"
+    var direction = ""
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)

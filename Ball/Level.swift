@@ -70,7 +70,7 @@ class Level: SKScene {
         for touch in touches {
             let node = nodeAtPoint(touch.locationInNode(self))
             for n in 0..<levelNum {
-                if node.name == "level\(n)" {
+                if node.name == "level\(n)" || node.name == "level\(n)Area" {
                     if n == 0 || defaults.boolForKey("pass\(n)") || defaults.boolForKey("pass\(n - 1)") {
                         moveToLevelN(n, name: node.name!)
                         break
