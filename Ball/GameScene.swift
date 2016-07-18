@@ -546,7 +546,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func gameOverNext() -> Void {
         menuNode.runAction(SKAction(named: "menuMoveDown")!)
         if state == .GameOverPass {
-            if nowLevelNum == levelNum - 1 {
+            if nowLevelNum == levelNum {
                 passedAllLevels()
                 return
             } else {
@@ -591,7 +591,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ballNode.physicsBody?.dynamic = true
         ballNode.physicsBody?.affectedByGravity = false
         ballNode.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-        ballNode.position = CGPoint(x: screenWidth / 2, y: 384) // init position
+        ballNode.zRotation = 0
         nowNode = ballNode
         nowNodeIndex = 0
         stateBar.alpha = 0
@@ -609,7 +609,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         obstacleLayer = levelNode.childNodeWithName("//obstacleLayer")
         obstacleLayer?.removeFromParent()
         
-        nowNode.position = startNode.position
+        nowNode.position = startNode.position // init position
 
         lastTouchLocation = ballNode.position
         lastTouchNodeLocation = ballNode.position
@@ -622,6 +622,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             obj.children.first!.children.first!.position = pos
             n += 1
         }
+        
     }
     
     func passedAllLevels() -> Void {
@@ -637,6 +638,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func bestTimeScore() -> Void {
+        defaults.setInteger(nowLevelNum, forKey: "passedLevelNum")
         bestTime = defaults.doubleForKey("best\(nowLevelNum)") ?? 0
         if pastTime > 0 && Double(pastTime) < bestTime || bestTime == 0 {
             bestTime = Double(pastTime)
@@ -852,7 +854,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         let b2 = stateBar.childNodeWithName("smallBall2")!.physicsBody
                         let bar = stateBar.childNodeWithName("bounceBar") as! SKSpriteNode
                         bar.size.width = bounce.k / bounce.kMax * screenWidth
-                        print(a)
+                        print(bounce.k)
                         if bounceFunctionV1!.dy == 0 { a = 1 }
                         bounceFunctionV1 = CGVector(dx: 0, dy: a * bounce.k * 300)
                         a = bounceFunctionV2!.dy / abs(bounceFunctionV2!.dy)

@@ -15,6 +15,8 @@ class Level: SKScene {
     let screenHeight: CGFloat = 667
     
     var chosen = false
+    var passedLevelNum = 0
+    var totalTime: CFTimeInterval = 0
     
     var levels = [Int: SKLabelNode!]()
     var homeNode: SKNode!
@@ -35,13 +37,14 @@ class Level: SKScene {
         buttonHome = menuNode.childNodeWithName("buttonHome") as! MSButtonNode
         buttonHelp = menuNode.childNodeWithName("buttonHelp") as! MSButtonNode
         
+        passedLevelNum = defaults.integerForKey("passedLevelNum") ?? 0
         if defaults.boolForKey("passedAll") {
-            for n in 0..<levelNum {
+            for n in 1...levelNum {
                 let levelName = "level\(n)"
                 levels[n] = self.childNodeWithName(levelName) as! SKLabelNode
             }
         } else {
-            for n in 0..<levelNum {
+            for n in 1...levelNum {
                 levels[n] = self.childNodeWithName("level\(n)") as! SKLabelNode
                 
                 if defaults.boolForKey("pass\(n)") {
@@ -69,9 +72,9 @@ class Level: SKScene {
         }
         for touch in touches {
             let node = nodeAtPoint(touch.locationInNode(self))
-            for n in 0..<levelNum {
+            for n in 1...levelNum {
                 if node.name == "level\(n)" || node.name == "level\(n)Area" {
-                    if n == 0 || defaults.boolForKey("pass\(n)") || defaults.boolForKey("pass\(n - 1)") {
+                    if n == 1 || defaults.boolForKey("pass\(n)") || defaults.boolForKey("pass\(n - 1)") {
                         moveToLevelN(n, name: node.name!)
                         break
                     }
