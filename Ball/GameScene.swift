@@ -146,6 +146,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var ballMovingHitWall = false
     var objIconTouchBeganTime: NSTimeInterval!
+    
+    var bounceFunctionV1: CGVector?
+    var bounceFunctionV2: CGVector?
 
     override func didMoveToView(view: SKView) {
         
@@ -158,7 +161,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ballNode = self.childNodeWithName("ball") as! Ball
         levelNode = self.childNodeWithName("levelNode")
         if levelNode.children.count == 0 {
-            let n = 3
+            let n = 2
             let levelPath = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks")
             let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: levelPath!))
             newLevel.name = "level\(n)"
@@ -207,6 +210,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     self.nowNodeIndex = 0
                     if let obstacleLayer = self.obstacleLayer {
                         self.levelNode.addChild(obstacleLayer)
+                        obstacleLayer.alpha = 0
                     }
                 }
             }
@@ -331,7 +335,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     let location = touch.locationInNode(self)
                     let node = nodeAtPoint(location)
                     
-                    checkStateBarPosition()
+                    checkStateBar()
                     
                     if let name = node.name {
                         print(name)
@@ -446,19 +450,51 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let contactA: SKPhysicsBody = contact.bodyA
         let contactB: SKPhysicsBody = contact.bodyB
         
-        let nodeA = contactA.node as! SKSpriteNode
-        let nodeB = contactB.node as! SKSpriteNode
+        var nodeA = contactA.node!
+        var nodeB = contactB.node!
+        if let node = nodeA as? SKSpriteNode {
+            nodeA = node
+        }
+        if let node = nodeB as? SKSpriteNode {
+            nodeB = node
+        }
         
         let categoryA = contactA.categoryBitMask
         let categoryB = contactB.categoryBitMask
         
-        // simple bounce
+        // bounce
         if categoryA == 1 && categoryB == 2 {
             let bounceNode = nodeB as! Bounce
             contactA.applyImpulse(contact.contactNormal * contact.collisionImpulse * bounceNode.k)
         } else if categoryB == 1 && categoryA == 2 {
             let bounceNode = nodeA as! Bounce
             contactB.applyImpulse(contact.contactNormal * contact.collisionImpulse * bounceNode.k)
+        }
+        
+        // invisible obstacle
+        if categoryA == 1 && categoryB == 3 {
+            nodeB.parent!.runAction(SKAction(named: "fadeHitObstacle")!)
+        } else if categoryB == 1 && categoryA == 3 {
+            nodeA.parent!.runAction(SKAction(named: "fadeHitObstacle")!)
+        }
+        
+        // showing bounce functions at the state bar
+        if categoryB == 5 {
+            if contactB.node?.name == "smallBall1" {
+                bounceFunctionV1 = bounceFunctionV1! * (-1)
+                contactB.velocity = bounceFunctionV1!
+            } else if contactB.node?.name == "smallBall2" {
+                bounceFunctionV2 = bounceFunctionV2! * (-1)
+                contactB.velocity = bounceFunctionV2!
+            }
+        } else if categoryA == 5 {
+            if contactB.node?.name == "smallBall1" {
+                bounceFunctionV1 = bounceFunctionV1! * (-1)
+                contactB.velocity = bounceFunctionV1!
+            } else if contactB.node?.name == "smallBall2" {
+                bounceFunctionV2 = bounceFunctionV2! * (-1)
+                contactB.velocity = bounceFunctionV2!
+            }
         }
     }
     
@@ -556,8 +592,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ballNode.physicsBody?.affectedByGravity = false
         ballNode.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
         ballNode.position = CGPoint(x: screenWidth / 2, y: 384) // init position
-        lastTouchLocation = ballNode.position
-        lastTouchNodeLocation = ballNode.position
         nowNode = ballNode
         nowNodeIndex = 0
         stateBar.alpha = 0
@@ -575,6 +609,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         obstacleLayer = levelNode.childNodeWithName("//obstacleLayer")
         obstacleLayer?.removeFromParent()
         
+        nowNode.position = startNode.position
+
+        lastTouchLocation = ballNode.position
+        lastTouchNodeLocation = ballNode.position
+
         var n = 1
         for obj in objNodes.children {
             objNodeIndex[obj.children.first!.children.first!.name!] = n
@@ -762,7 +801,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func checkStateBarPosition() -> Void {
+    func checkStateBar() -> Void {
         if stateBar.alpha != 0 {
             stateBar.runAction(SKAction(named: "fadeOutHide")!)
         }
@@ -808,27 +847,47 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         if bounce.k < bounce.kMax && dy > 0 || bounce.k > bounce.kMin && dy < 0 {
                             bounce.k += dy / 200
                         }
-                        functionLabel("Force degree: \(String(format: "%.3f", bounce.k / bounce.kMax))")
+                        var a = bounceFunctionV1!.dy / abs(bounceFunctionV1!.dy)
+                        let b1 = stateBar.childNodeWithName("smallBall1")!.physicsBody
+                        let b2 = stateBar.childNodeWithName("smallBall2")!.physicsBody
+                        let bar = stateBar.childNodeWithName("bounceBar") as! SKSpriteNode
+                        bar.size.width = bounce.k / bounce.kMax * screenWidth
+                        print(a)
+                        if bounceFunctionV1!.dy == 0 { a = 1 }
+                        bounceFunctionV1 = CGVector(dx: 0, dy: a * bounce.k * 300)
+                        a = bounceFunctionV2!.dy / abs(bounceFunctionV2!.dy)
+                        if bounceFunctionV2!.dy == 0 { a = -1 }
+                        bounceFunctionV2 = CGVector(dx: 0, dy: a * bounce.k * 300)
+                        b1?.velocity = bounceFunctionV1!
+                        b2?.velocity = bounceFunctionV2!
                     }
                 case 4:
                     if let shortStick = child as? ShortStick {
+                        let b = stateBar.childNodeWithName("smallBall")!.physicsBody
                         if shortStick.direction != "left" && dx < 0 {
                             shortStick.direction = "left"
+                            b?.velocity = CGVector(dx: 0, dy: 0)
+                            b?.applyImpulse(CGVector(dx: -5, dy: 0))
                             nowNode.runAction(SKAction.rotateToAngle(angleToRadian(60), duration: 0.21))
                         } else if shortStick.direction != "right" && dx > 0 {
                             shortStick.direction = "right"
+                            b?.velocity = CGVector(dx: 0, dy: 0)
+                            b?.applyImpulse(CGVector(dx: 5, dy: 0))
                             nowNode.runAction(SKAction.rotateToAngle(0, duration: 0.21))
+                        } else if shortStick.direction == "left" && dx < 0
+                            || shortStick.direction == "right" && dx > 0 {
+                            b?.velocity += CGVector(dx: dx * 2, dy: 0)
                         }
-                        functionLabel(shortStick.direction)
                     }
                 case 8:
                     if let stick = child as? Stick {
-                        if nowNode.xScale < stick.lenMax && dy > 0 {
-                            nowNode.xScale += 0.02
-                        } else if nowNode.xScale > stick.lenMin && dy < 0 {
-                            nowNode.xScale -= 0.02
+                        if stick.xScale < stick.lenMax && dy > 0 || stick.xScale > stick.lenMin && dy < 0 {
+                            stick.xScale += dy / 100
                         }
-                        functionLabel(String(format: "%.2f", stick.size.width * nowNode.xScale))
+                        let x = stick.xScale
+                        stick.xScale = x > 2 ? 2 : x < 0.5 ? 0.5 : x
+                        let bar = stateBar.childNodeWithName("stickBar") as! SKSpriteNode
+                        bar.xScale = stick.xScale
                     }
                 default:
                     break
@@ -846,15 +905,77 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 switch Int(bm) {
                 case 2:
                     if let bounce = child as? Bounce {
-                        functionLabel("Force degree: \(String(format: "%.3f", bounce.k / bounce.kMax))")
+                        let bounceBar = SKSpriteNode(color: UIColor.whiteColor(), size: CGSize(width: screenWidth * bounce.k / bounce.kMax, height: menuHeight))
+                        bounceBar.name = "bounceBar"
+                        bounceBar.alpha = 0.4
+                        let smallBall = SKSpriteNode(imageNamed: "ballIcon")
+                        let groundTop = SKShapeNode(rectOfSize: CGSize(width: screenWidth, height: 2))
+                        let groundBottom = SKShapeNode(rectOfSize: CGSize(width: screenWidth, height: 2))
+                        groundTop.physicsBody = SKPhysicsBody(rectangleOfSize: CGSize(width: screenWidth, height: 2))
+                        groundBottom.physicsBody = SKPhysicsBody(rectangleOfSize: CGSize(width: screenWidth, height: 2))
+                        smallBall.physicsBody = SKPhysicsBody(circleOfRadius: smallBall.size.width / 2)
+                        groundTop.physicsBody?.dynamic = false
+                        groundBottom.physicsBody?.dynamic = false
+                        groundBottom.physicsBody?.contactTestBitMask = 1
+                        groundTop.physicsBody?.contactTestBitMask = 1
+                        groundTop.physicsBody?.categoryBitMask = 5
+                        groundBottom.physicsBody?.categoryBitMask = 5
+                        smallBall.physicsBody?.dynamic = true
+                        smallBall.physicsBody?.affectedByGravity = false
+                        smallBall.physicsBody?.allowsRotation = true
+                        bounceFunctionV1 = CGVector(dx: 0, dy: bounce.k * 300)
+                        bounceFunctionV2 = CGVector(dx: 0, dy: -bounce.k * 300)
+                        smallBall.physicsBody?.velocity = bounceFunctionV1!
+                        groundBottom.position = CGPoint(x: 0, y: -33.5)
+                        groundTop.position = CGPoint(x: 0, y: 33.5)
+                        groundTop.alpha = 0
+                        groundBottom.alpha = 0
+                        smallBall.name = "smallBall1"
+                        smallBall.position = CGPoint(x: -84, y: smallBall.position.y)
+                        let b2 = smallBall.copy() as! SKSpriteNode
+                        b2.name = "smallBall2"
+                        b2.physicsBody?.velocity = bounceFunctionV2!
+                        b2.position = CGPoint(x: 84, y: b2.position.y)
+                        stateBar.addChild(groundTop)
+                        stateBar.addChild(groundBottom)
+                        stateBar.addChild(smallBall)
+                        stateBar.addChild(b2)
+                        stateBar.addChild(bounceBar)
+                        return
                     }
                 case 4:
                     if let shortStick = child as? ShortStick {
-                        functionLabel(shortStick.direction)
+                        let smallBall = SKSpriteNode(imageNamed: "ballIcon")
+                        let ground = SKShapeNode(rectOfSize: CGSize(width: screenWidth, height: 3))
+                        smallBall.name = "smallBall"
+                        smallBall.physicsBody = SKPhysicsBody(circleOfRadius: smallBall.size.width / 2)
+                        smallBall.physicsBody?.dynamic = true
+                        smallBall.physicsBody?.affectedByGravity = true
+                        smallBall.physicsBody?.allowsRotation = true
+                        ground.physicsBody = SKPhysicsBody(rectangleOfSize: CGSize(width: screenWidth, height: 3))
+                        ground.physicsBody?.dynamic = false
+                        ground.alpha = 0
+                        stateBar.addChild(ground)
+                        stateBar.addChild(smallBall)
+                        ground.position = CGPoint(x: 0, y: -20)
+                        
+                        if shortStick.direction == "right" {
+                            smallBall.physicsBody?.applyImpulse(CGVector(dx: 4, dy: 0))
+                        } else if shortStick.direction == "left" {
+                            smallBall.physicsBody?.applyImpulse(CGVector(dx: -4, dy: 0))
+                        }
+                        return
                     }
                 case 8:
                     if let stick = child as? Stick {
-                        functionLabel(String(format: "%.2f", stick.size.width * nowNode.xScale))
+                        let stickBar = SKSpriteNode(color: UIColor.whiteColor(), size: CGSize(width: screenWidth / 2, height: menuHeight))
+                        stickBar.name = "stickBar"
+                        stickBar.alpha = 0.4
+                        stickBar.xScale = stick.xScale
+                        stickBar.anchorPoint = CGPoint(x: 0, y: 0)
+                        stickBar.position = CGPoint(x: -screenWidth / 2, y: -menuHeight / 2)
+                        stateBar.addChild(stickBar)
+                        return
                     }
                 default:
                     break
@@ -863,13 +984,4 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func functionLabel(str: String) -> Void {
-        let label = SKLabelNode(text: str)
-        label.fontColor = UIColor.blueColor()
-        if stateBar.children.count > 0 {
-            stateBar.removeAllChildren()
-        }
-        stateBar.addChild(label)
-        label.position = CGPoint(x: 0, y: -10)
-    }
 }

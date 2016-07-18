@@ -19,6 +19,7 @@ class TheObjects: SKSpriteNode {
                 gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
                 if gameScene.nowNode != self.parent! {
                     gameScene.nowNode = self.parent!
+                    gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
                 }
             }
         case .Dropping:

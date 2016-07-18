@@ -13,7 +13,7 @@ class Stick: TheObjects {
     let objName = "Stick"
     
     let lenMin: CGFloat = 0.5
-    let lenMax: CGFloat = 1.9
+    let lenMax: CGFloat = 2
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)

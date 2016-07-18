@@ -21,6 +21,7 @@ class Ball: SKSpriteNode {
                 gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
                 if gameScene.nowNode != self {
                     gameScene.nowNode = self
+                    gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
                 }
             }
         case .Dropping:

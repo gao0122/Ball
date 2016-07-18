@@ -46,6 +46,7 @@
 		00C60DCF1D30417B00BF262D /* SKTTimingFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00C60DC11D30417B00BF262D /* SKTTimingFunctions.swift */; };
 		00C60DD01D30417B00BF262D /* Vector3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00C60DC21D30417B00BF262D /* Vector3.swift */; };
 		00D580FF1D32FADB00702DBE /* AnimationActions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00D580FE1D32FADB00702DBE /* AnimationActions.sks */; };
+		00EDFA751D3B3FF9009B3C13 /* Setting.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00EDFA741D3B3FF9009B3C13 /* Setting.sks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -90,6 +91,7 @@
 		00C60DC11D30417B00BF262D /* SKTTimingFunctions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SKTTimingFunctions.swift; sourceTree = "<group>"; };
 		00C60DC21D30417B00BF262D /* Vector3.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Vector3.swift; sourceTree = "<group>"; };
 		00D580FE1D32FADB00702DBE /* AnimationActions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = AnimationActions.sks; sourceTree = "<group>"; };
+		00EDFA741D3B3FF9009B3C13 /* Setting.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Setting.sks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,6 +145,7 @@
 				009E44921D3030A600F8B596 /* Home.sks */,
 				009E448C1D3030A600F8B596 /* Level.sks */,
 				009E44891D3030A600F8B596 /* GameScene.sks */,
+				00EDFA741D3B3FF9009B3C13 /* Setting.sks */,
 				009E44A81D30316D00F8B596 /* objects */,
 				009E44A71D30315D00F8B596 /* levels */,
 			);
@@ -297,6 +300,7 @@
 				000AB5E71D302F0D00D75C33 /* assets.atlas in Resources */,
 				009E449A1D3030A600F8B596 /* Level.sks in Resources */,
 				009E44951D3030A600F8B596 /* Bounce.sks in Resources */,
+				00EDFA751D3B3FF9009B3C13 /* Setting.sks in Resources */,
 				00ADCDC41D31F85F0070632B /* Level2.sks in Resources */,
 				009E44971D3030A600F8B596 /* GameScene.sks in Resources */,
 				000AB5DA1D302F0500D75C33 /* Main.storyboard in Resources */,
