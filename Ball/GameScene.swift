@@ -118,6 +118,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var stateBar: SKSpriteNode!
     
     var defaults: NSUserDefaults!
+    var totalTime: Double = 0
+    var passedLevelNum = 0
     
     var lastTouchNodeLocation: CGPoint!
     var lastTouchLocation: CGPoint!
@@ -161,7 +163,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ballNode = self.childNodeWithName("ball") as! Ball
         levelNode = self.childNodeWithName("levelNode")
         if levelNode.children.count == 0 {
-            let n = 2
+            let n = 5
             let levelPath = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks")
             let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: levelPath!))
             newLevel.name = "level\(n)"
@@ -216,14 +218,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         objIconNode.selectedHandler = {
-            if self.nowNodeIndex == self.objNodes.children.count {
-                self.nowNodeIndex = 0
-                self.nowNode = self.ballNode
-            } else {
-                self.nowNode = self.objNodes.children[self.nowNodeIndex].children.first!.children.first!
-                
+            if self.state == .Ready {
+                if self.nowNodeIndex == self.objNodes.children.count {
+                    self.nowNodeIndex = 0
+                    self.nowNode = self.ballNode
+                } else {
+                    self.nowNode = self.objNodes.children[self.nowNodeIndex].children.first!.children.first!
+                    
+                }
+                self.nowNode.runAction(SKAction(named: "scaleToFocus")!)
             }
-            self.nowNode.runAction(SKAction(named: "scaleToFocus")!)
         }
         
     }
@@ -496,6 +500,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 contactB.velocity = bounceFunctionV2!
             }
         }
+        
+        //
+        
     }
     
     func isBallInArea(node: SKSpriteNode, hard: Bool) -> Bool {
@@ -530,10 +537,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func gameOver() -> Void {
         if state == .Failed {
             state = .GameOverFailed
-            resultLabel.text = "Failed..."
+            resultLabel.text = String(format: "%.3f", totalTime) + " Failed..."
         } else if state == .Pass {
+            if nowLevelNum > passedLevelNum {
+                defaults.setInteger(nowLevelNum, forKey: "passedLevelNum")
+            }
+            bestTime = defaults.doubleForKey("best\(nowLevelNum)") ?? 0
             bestTimeScore()
-            resultLabel.text = "Pass!"
+            resultLabel.text = String(format: "%.3f", totalTime) + " Pass!"
             state = .GameOverPass
         } else {
             return
@@ -601,8 +612,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         rotationNode.alpha = 0
         functionNode.alpha = 0
         
-        bestTimeScore()
         timeLabel.text = "0.000"
+        bestTime = defaults.doubleForKey("best\(nowLevelNum)") ?? 0
         objNodes = levelNode.childNodeWithName("//objNodes")
         startNode = levelNode.childNodeWithName("//start") as! SKSpriteNode
         endNode = levelNode.childNodeWithName("//end") as! SKSpriteNode
@@ -623,6 +634,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             n += 1
         }
         
+        passedLevelNum = defaults.integerForKey("passedLevelNum")
+        totalTime = defaults.doubleForKey("totalTime")
     }
     
     func passedAllLevels() -> Void {
@@ -638,10 +651,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func bestTimeScore() -> Void {
-        defaults.setInteger(nowLevelNum, forKey: "passedLevelNum")
-        bestTime = defaults.doubleForKey("best\(nowLevelNum)") ?? 0
         if pastTime > 0 && Double(pastTime) < bestTime || bestTime == 0 {
+            totalTime -= bestTime
             bestTime = Double(pastTime)
+            totalTime += bestTime
+            totalTime = totalTime < 0 ? 0 : totalTime
+            defaults.setDouble(totalTime, forKey: "totalTime")
         }
         defaults.setDouble(bestTime, forKey: "best\(nowLevelNum)")
         defaults.synchronize()
@@ -854,7 +869,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         let b2 = stateBar.childNodeWithName("smallBall2")!.physicsBody
                         let bar = stateBar.childNodeWithName("bounceBar") as! SKSpriteNode
                         bar.size.width = bounce.k / bounce.kMax * screenWidth
-                        print(bounce.k)
                         if bounceFunctionV1!.dy == 0 { a = 1 }
                         bounceFunctionV1 = CGVector(dx: 0, dy: a * bounce.k * 300)
                         a = bounceFunctionV2!.dy / abs(bounceFunctionV2!.dy)

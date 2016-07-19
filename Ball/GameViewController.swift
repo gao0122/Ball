@@ -9,6 +9,8 @@
 import UIKit
 import SpriteKit
 
+let showPhy = true
+
 class GameViewController: UIViewController {
 
     override func viewDidLoad() {
@@ -20,9 +22,9 @@ class GameViewController: UIViewController {
 
             /* Sprite Kit applies additional optimizations to improve rendering performance */
             skView.ignoresSiblingOrder = true
-            
+            skView.showsPhysics = showPhy
             scene.scaleMode = .AspectFit
-            
+
             skView.presentScene(scene)
         }
     }

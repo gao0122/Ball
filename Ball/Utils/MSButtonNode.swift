@@ -83,6 +83,9 @@ class MSButtonNode: SKSpriteNode {
                     scene.objIconTouchBeganTime = nil
                     selectedHandler()
                     state = .MSButtonNodeStateActive
+                } else {
+                    selectedHandler()
+                    state = .MSButtonNodeStateActive
                 }
             }
         }

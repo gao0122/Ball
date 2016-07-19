@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "000AB5CC1D302F0500D75C33"
-               BuildableName = "Ball.app"
-               BlueprintName = "Ball"
-               ReferencedContainer = "container:Ball.xcodeproj">
+               BuildableName = "Don&apos;t Drop Me!.app"
+               BlueprintName = "Don&apos;t Drop Me!"
+               ReferencedContainer = "container:Don&apos;t Drop Me!.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "000AB5CC1D302F0500D75C33"
-            BuildableName = "Ball.app"
-            BlueprintName = "Ball"
-            ReferencedContainer = "container:Ball.xcodeproj">
+            BuildableName = "Don&apos;t Drop Me!.app"
+            BlueprintName = "Don&apos;t Drop Me!"
+            ReferencedContainer = "container:Don&apos;t Drop Me!.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -56,9 +56,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "000AB5CC1D302F0500D75C33"
-            BuildableName = "Ball.app"
-            BlueprintName = "Ball"
-            ReferencedContainer = "container:Ball.xcodeproj">
+            BuildableName = "Don&apos;t Drop Me!.app"
+            BlueprintName = "Don&apos;t Drop Me!"
+            ReferencedContainer = "container:Don&apos;t Drop Me!.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -75,9 +75,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "000AB5CC1D302F0500D75C33"
-            BuildableName = "Ball.app"
-            BlueprintName = "Ball"
-            ReferencedContainer = "container:Ball.xcodeproj">
+            BuildableName = "Don&apos;t Drop Me!.app"
+            BlueprintName = "Don&apos;t Drop Me!"
+            ReferencedContainer = "container:Don&apos;t Drop Me!.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -16,7 +16,7 @@ class Level: SKScene {
     
     var chosen = false
     var passedLevelNum = 0
-    var totalTime: CFTimeInterval = 0
+    var totalTime: Double = 0
     
     var levels = [Int: SKLabelNode!]()
     var homeNode: SKNode!
@@ -38,6 +38,8 @@ class Level: SKScene {
         buttonHelp = menuNode.childNodeWithName("buttonHelp") as! MSButtonNode
         
         passedLevelNum = defaults.integerForKey("passedLevelNum") ?? 0
+        totalTime = defaults.doubleForKey("totalTime") ?? 0
+        
         if defaults.boolForKey("passedAll") {
             for n in 1...levelNum {
                 let levelName = "level\(n)"
@@ -88,6 +90,7 @@ class Level: SKScene {
             if let scene = Home(fileNamed: "Home") {
                 let skView = self.view as SKView!
                 /* Sprite Kit applies additional optimizations to improve rendering performance */
+                skView.showsPhysics = showPhy
                 skView.ignoresSiblingOrder = true
                 scene.scaleMode = .AspectFill
                 skView.presentScene(scene)
@@ -100,22 +103,24 @@ class Level: SKScene {
     }
     
     func moveToLevelN(n: Int, name: String!) -> Void {
-        let scene = GameScene(fileNamed: "GameScene") as GameScene!
-        let skView = self.view as SKView!
-        
-        /* Sprite Kit applies additional optimizations to improve rendering performance */
-        skView.ignoresSiblingOrder = true
-        
-        /* Set the scale mode to scale to fit the window */
-        scene.scaleMode = .AspectFill
-        
-        let path = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks")
-        let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: path!))
-        newLevel.name = name
-        scene.childNodeWithName("levelNode")!.addChild(newLevel)
-        scene.nowLevelNum = n
-        
-        skView.presentScene(scene)
-        chosen = true
+        if let path = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks") {
+            let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: path))
+
+            let scene = GameScene(fileNamed: "GameScene") as GameScene!
+            let skView = self.view as SKView!
+            
+            /* Sprite Kit applies additional optimizations to improve rendering performance */
+            skView.ignoresSiblingOrder = true
+            skView.showsPhysics = showPhy
+            /* Set the scale mode to scale to fit the window */
+            scene.scaleMode = .AspectFill
+            
+            newLevel.name = name
+            scene.childNodeWithName("levelNode")!.addChild(newLevel)
+            scene.nowLevelNum = n
+            
+            skView.presentScene(scene)
+            chosen = true
+        }
     }
 }
