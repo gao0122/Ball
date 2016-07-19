@@ -51,7 +51,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		000AB5CD1D302F0500D75C33 /* Don't Drop Me!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Don't Drop Me!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		000AB5CD1D302F0500D75C33 /* YBall.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YBall.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000AB5D01D302F0500D75C33 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		000AB5D91D302F0500D75C33 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		000AB5DB1D302F0500D75C33 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -118,7 +118,7 @@
 		000AB5CE1D302F0500D75C33 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				000AB5CD1D302F0500D75C33 /* Don't Drop Me!.app */,
+				000AB5CD1D302F0500D75C33 /* YBall.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -239,9 +239,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		000AB5CC1D302F0500D75C33 /* Don't Drop Me! */ = {
+		000AB5CC1D302F0500D75C33 /* YBall */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 000AB5E31D302F0500D75C33 /* Build configuration list for PBXNativeTarget "Don't Drop Me!" */;
+			buildConfigurationList = 000AB5E31D302F0500D75C33 /* Build configuration list for PBXNativeTarget "YBall" */;
 			buildPhases = (
 				000AB5C91D302F0500D75C33 /* Sources */,
 				000AB5CA1D302F0500D75C33 /* Frameworks */,
@@ -251,9 +251,9 @@
 			);
 			dependencies = (
 			);
-			name = "Don't Drop Me!";
+			name = YBall;
 			productName = Ball;
-			productReference = 000AB5CD1D302F0500D75C33 /* Don't Drop Me!.app */;
+			productReference = 000AB5CD1D302F0500D75C33 /* YBall.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -272,7 +272,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 000AB5C81D302F0500D75C33 /* Build configuration list for PBXProject "Don't Drop Me!" */;
+			buildConfigurationList = 000AB5C81D302F0500D75C33 /* Build configuration list for PBXProject "YBall" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -285,7 +285,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				000AB5CC1D302F0500D75C33 /* Don't Drop Me! */,
+				000AB5CC1D302F0500D75C33 /* YBall */,
 			);
 		};
 /* End PBXProject section */
@@ -466,7 +466,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.yuchao.Don-Drop-Me-";
-				PRODUCT_NAME = "Don't Drop Me!";
+				PRODUCT_NAME = YBall;
 				"Texture Atlas Maximum Size" = 4096x4096;
 			};
 			name = Debug;
@@ -481,7 +481,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.yuchao.Don-Drop-Me-";
-				PRODUCT_NAME = "Don't Drop Me!";
+				PRODUCT_NAME = YBall;
 				"Texture Atlas Maximum Size" = 4096x4096;
 			};
 			name = Release;
@@ -489,7 +489,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		000AB5C81D302F0500D75C33 /* Build configuration list for PBXProject "Don't Drop Me!" */ = {
+		000AB5C81D302F0500D75C33 /* Build configuration list for PBXProject "YBall" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				000AB5E11D302F0500D75C33 /* Debug */,
@@ -498,7 +498,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		000AB5E31D302F0500D75C33 /* Build configuration list for PBXNativeTarget "Don't Drop Me!" */ = {
+		000AB5E31D302F0500D75C33 /* Build configuration list for PBXNativeTarget "YBall" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				000AB5E41D302F0500D75C33 /* Debug */,
