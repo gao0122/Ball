@@ -15,7 +15,7 @@ class Bounce: TheObjects {
     let kMin: CGFloat = 0
     let kMax: CGFloat = 1.48
     
-    var k: CGFloat = 0.6 {
+    var k: CGFloat = 0.78 {
         didSet {
             k = k > kMax ? kMax : k
             k = k < kMin ? kMin : k

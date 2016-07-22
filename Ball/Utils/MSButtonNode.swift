@@ -96,11 +96,20 @@ class MSButtonNode: SKSpriteNode {
         if let scene = self.scene as? GameScene {
             if !scene.touched {
                 // iconLongPressAction
-                let pos = CGPoint(x: scene.screenWidth / 2, y: scene.screenHeidht / 2 + 40)
-                scene.nowNode.position = pos
-                scene.lastTouchNodeLocation = pos
-                scene.updateRF()
-                scene.nowNode.runAction(SKAction(named: "scaleToFocus")!)
+                scene.nowNode.runAction(SKAction(named: "moveToCenter")!)
+                scene.lastTouchNodeLocation = CGPoint(x: scene.screenWidth / 2, y: 384)
+                let scale = SKAction.afterDelay(0.4, performAction: SKAction(named: "scaleToFocus")!)
+                scale.timingMode = SKActionTimingMode.EaseInEaseOut
+                scene.nowNode.runAction(scale)
+                scene.longPressObjIconUpdateRF = true
+                
+                if scene.functionNode.alpha != 0 {
+                    scene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                }
+                if scene.rotationNode.alpha != 0 {
+                    scene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                }
+
             }
             scene.touched = false
             longTouched = false

@@ -54,7 +54,71 @@ class Home: SKScene {
     }
     
     func moveToLevelScene() -> Void {
-        let cameraMove = SKAction.moveTo(CGPoint(x: camera!.position.x, y: -screenHeight / 2), duration: 1.4)
+        let cameraMove = SKAction.moveTo(CGPoint(x: camera!.position.x, y: -screenHeight / 2), duration: 1)
         camera?.runAction(cameraMove)
     }
 }
+
+// RF: 1 is rotation only, 2 is function only
+let objs: [String: [String: String]] = [
+    "bounceIR": [
+        "halfWidth": "15",
+        "rf": "1",
+        "categoryBm": "16",
+        "name": "Bounce I"
+    ],
+    "bounceI": [
+        "halfWidth": "15",
+        "rf": "0",
+        "categoryBm": "16",
+        "name": "Bounce I"
+    ],
+    "bounceR": [
+        "halfWidth": "21",
+        "rf": "1",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
+    "bounceF": [
+        "halfWidth": "21",
+        "rf": "2",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
+    "bounceRF": [
+        "halfWidth": "21",
+        "rf": "3",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
+    "ball": [
+        "halfWidth": "19",
+        "rf": "0",
+        "categoryBm": "1",
+        "name": "The ball"
+    ],
+    "shortStickM": [
+        "halfWidth": "48",
+        "rf": "2",
+        "categoryBm": "4",
+        "name": "Short stick"
+    ],
+    "shortStick": [
+        "halfWidth": "48",
+        "rf": "0",
+        "categoryBm": "4",
+        "name": "Short stick"
+    ],
+    "bounce": [
+        "halfWidth": "21",
+        "rf": "0",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
+    "stick": [
+        "halfWidth": "42",
+        "rf": "3",
+        "categoryBm": "8",
+        "name": "Stick"
+    ]
+]

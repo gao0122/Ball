@@ -8,7 +8,7 @@
 
 import SpriteKit
 
-let levelNum = 4
+let levelNum = 30
 
 class Level: SKScene {
     
@@ -39,20 +39,21 @@ class Level: SKScene {
         
         passedLevelNum = defaults.integerForKey("passedLevelNum") ?? 0
         totalTime = defaults.doubleForKey("totalTime") ?? 0
-        
-        if defaults.boolForKey("passedAll") {
-            for n in 1...levelNum {
-                let levelName = "level\(n)"
-                levels[n] = self.childNodeWithName(levelName) as! SKLabelNode
+
+        for n in 1...levelNum {
+            let levelName = "level\(n)"
+            if let level = self.childNodeWithName(levelName) as? SKLabelNode {
+                levels[n] = level
             }
-        } else {
-            for n in 1...levelNum {
-                levels[n] = self.childNodeWithName("level\(n)") as! SKLabelNode
-                
+            if defaults.boolForKey("passedAll") {
+                // passed all - UI
+            } else if defaults.boolForKey("unlockedAll") {
+                // unlocked - UI
+            } else {
                 if defaults.boolForKey("pass\(n)") {
-                    
+                    // pass UI
                 } else {
-                    
+                    // locked UI
                 }
             }
         }
@@ -62,7 +63,7 @@ class Level: SKScene {
             let homeRef = SKReferenceNode(URL: NSURL(fileURLWithPath: path!))
             self.homeNode.addChild(homeRef)
             
-            let cameraMove = SKAction.moveTo(CGPoint(x: self.camera!.position.x, y: self.screenHeight * 1.5), duration: 1.4)
+            let cameraMove = SKAction.moveTo(CGPoint(x: self.camera!.position.x, y: self.screenHeight * 1.5), duration: 1)
             self.camera?.runAction(cameraMove)
         }
         buttonHelp.selectedHandler = showHelp
@@ -76,7 +77,7 @@ class Level: SKScene {
             let node = nodeAtPoint(touch.locationInNode(self))
             for n in 1...levelNum {
                 if node.name == "level\(n)" || node.name == "level\(n)Area" {
-                    if n == 1 || defaults.boolForKey("pass\(n)") || defaults.boolForKey("pass\(n - 1)") {
+                    if n == 1 || defaults.boolForKey("pass\(n)") || defaults.boolForKey("pass\(n - 1)") || defaults.boolForKey("unlockedAll") {
                         moveToLevelN(n, name: node.name!)
                         break
                     }
@@ -112,6 +113,7 @@ class Level: SKScene {
             /* Sprite Kit applies additional optimizations to improve rendering performance */
             skView.ignoresSiblingOrder = true
             skView.showsPhysics = showPhy
+            skView.showsNodeCount = showNodes
             /* Set the scale mode to scale to fit the window */
             scene.scaleMode = .AspectFill
             
@@ -119,7 +121,7 @@ class Level: SKScene {
             scene.childNodeWithName("levelNode")!.addChild(newLevel)
             scene.nowLevelNum = n
             
-            skView.presentScene(scene)
+            skView.presentScene(scene, transition: SKTransition.crossFadeWithDuration(0.7))
             chosen = true
         }
     }

@@ -11,57 +11,24 @@ import Foundation
 import EventKit
 
 enum GameState {
-    case Ready, Dropping, Pass, Failed, GameOverPass, GameOverFailed
+    case Ready, Dropping, Pass, Failed, GameOverPass, GameOverFailed, Tutorial
 }
 
-// RF: 1 is rotation only, 2 is function only
-let objs: [String: [String: String]] = [
-    "bounceR": [
-        "halfWidth": "21",
-        "rf": "1",
-        "name": "Bounce"
-    ],
-    "bounceF": [
-        "halfWidth": "21",
-        "rf": "2",
-        "name": "Bounce"
-    ],
-    "bounceRF": [
-        "halfWidth": "21",
-        "rf": "3",
-        "name": "Bounce"
-    ],
-    "ball": [
-        "halfWidth": "19",
-        "rf": "0",
-        "categoryBm": "1",
-        "name": "The ball"
-    ],
-    "shortStickM": [
-        "halfWidth": "48",
-        "rf": "2",
-        "categoryBm": "4",
-        "name": "Short stick"
-    ],
-    "shortStick": [
-        "halfWidth": "48",
-        "rf": "0",
-        "categoryBm": "4",
-        "name": "Short stick"
-    ],
-    "bounce": [
-        "halfWidth": "21",
-        "rf": "0",
-        "categoryBm": "2",
-        "name": "Bounce"
-    ],
-    "stick": [
-        "halfWidth": "42",
-        "rf": "3",
-        "categoryBm": "8",
-        "name": "Stick"
-    ]
-]
+enum TutorialState {
+    case Go, Icon, TouchMoving, Function, Rotation, Done, Bounce
+}
+
+struct ObjState {
+    var levelNum: Int!
+    var objPos: [String: CGPoint]
+    var objClass: [String: SKNode]
+    
+    init(levelNum: Int) {
+        self.levelNum = levelNum
+        objPos = [String: CGPoint]()
+        objClass = [String: SKNode]()
+    }
+}
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
@@ -91,13 +58,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let tt = SKTexture(imageNamed: "\(nowNode.name!)Icon")
             objIconNode.size = tt.size()
             objIconNode.texture = tt
-            nowNodeIndex = objNodeIndex[nowNode.name!]!
+            var name = nowNode.name!
+            if nowNode != ballNode {
+                name = (nowNode.parent?.parent?.name)!
+            }
+            nowNodeIndex = objNodeIndex[name]!
             
             rotationNode.removeAllActions()
             functionNode.removeAllActions()
             rotationNode.alpha = 0
             functionNode.alpha = 0
-
+            
             updateRF()
         }
     }
@@ -116,6 +87,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var functionNode: SKSpriteNode!
     var obstacleLayer: SKNode?
     var stateBar: SKSpriteNode!
+    var tutorialLayer: SKNode?
+    var scoreBoard: SKSpriteNode!
     
     var defaults: NSUserDefaults!
     var totalTime: Double = 0
@@ -148,14 +121,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var ballMovingHitWall = false
     var objIconTouchBeganTime: NSTimeInterval!
+    var longPressObjIconUpdateRF = false
     
     var bounceFunctionV1: CGVector?
     var bounceFunctionV2: CGVector?
-
+    
+    var objState: ObjState!
+    var tutorialState: TutorialState = .Go {
+        didSet {
+            if state == .Tutorial {
+                switch tutorialState {
+                case .Go:
+                    
+                    break
+                case .Icon:
+                    break
+                case .TouchMoving:
+                    addTouchIconAtPoint(CGPoint(x: 100, y: 300))
+                default:
+                    break
+                }
+            }
+        }
+    }
+    
     override func didMoveToView(view: SKView) {
         
         /* Setup your scene here */
         physicsWorld.contactDelegate = self
+        
         enableMultiTouch()
         defaults = NSUserDefaults.standardUserDefaults()
         
@@ -184,28 +178,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         functionNode = self.childNodeWithName("function") as! SKSpriteNode
         obstacleLayer = levelNode.childNodeWithName("//obstacleLayer")
         stateBar = menuNode.childNodeWithName("stateBar") as! SKSpriteNode
+        tutorialLayer = levelNode.childNodeWithName("//tutorialLayer")
+        scoreBoard = self.childNodeWithName("scoreBoard") as! SKSpriteNode
         
         objNodeIndex["ball"] = 0
+        objState = ObjState.init(levelNum: self.nowLevelNum)
         initGame()
         
         buttonHome.selectedHandler = {
             if let scene = Level(fileNamed: "Level") {
+                scene.scaleMode = .AspectFill
                 let skView = self.view as SKView!
                 /* Sprite Kit applies additional optimizations to improve rendering performance */
                 skView.ignoresSiblingOrder = true
-                scene.scaleMode = .AspectFill
-                skView.presentScene(scene)
+                skView.presentScene(scene, transition: SKTransition.doorwayWithDuration(0.8))
             }
         }
         buttonRestart.selectedHandler = {
             self.restart(self.nowLevelNum)
         }
         buttonGo.selectedHandler = {
+            let tutorial = self.state == .Tutorial && self.tutorialState == .Go
             if self.state == .GameOverPass || self.state == .GameOverFailed {
                 self.gameOverNext()
-            } else if self.state == .Ready {
+            } else if self.state == .Ready || tutorial {
+                if tutorial { self.tutorialState = .Icon }
                 if self.isBallInArea(self.startNode, hard: true) {
                     //self.objNodes.children.obj.children.first!.children.first!.children
+
+                    self.objState.objPos[self.ballNode.name!] = self.ballNode.position
                     self.ballNode.physicsBody?.affectedByGravity = true
                     self.state = .Dropping
                     self.nowNode = self.ballNode
@@ -218,13 +219,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         objIconNode.selectedHandler = {
-            if self.state == .Ready {
+            let tutorial = self.state == .Tutorial && self.tutorialState == .Icon
+            if self.state == .Ready || tutorial {
                 if self.nowNodeIndex == self.objNodes.children.count {
                     self.nowNodeIndex = 0
                     self.nowNode = self.ballNode
                 } else {
                     self.nowNode = self.objNodes.children[self.nowNodeIndex].children.first!.children.first!
-                    
                 }
                 self.nowNode.runAction(SKAction(named: "scaleToFocus")!)
             }
@@ -254,7 +255,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         if node == rotationNode || rotationNode == node.parent {
                             functionNode.runAction(SKAction(named: "fadeOut")!)
                             startRotation = true
-                            startZR = nowNode.zRotation
+                            // fix bug that the rotation icon is not at the same y line as nowNode
+                            let dy = nowNode.position.y - location.y
+                            let dx = nowNode.position.x - location.x
+                            startZR = nowNode.zRotation - atan2(dy, dx)
                         } else {
                             rotationNode.runAction(SKAction(named: "fadeOut")!)
                             startFunction = true
@@ -277,7 +281,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             default:
                 multiTouching = true
             }
-            
+        case .Tutorial:
+            break
         default:
             break
         }
@@ -299,7 +304,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                                 let dx = nowNode.position.x - location.x
                                 let angle = startZR + atan2(dy, dx)
                                 nowNode.zRotation = angle % (pai * 2)
-
+                                
                                 rotationNode.position = location
                             } else {
                                 objFunctionMoving(location)
@@ -364,8 +369,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 for touch in touches {
                     let location = touch.locationInNode(self)
                     let node = nodeAtPoint(location)
-                    if let nodeName = node.name {
-                        if nodeName == "bg" || nodeName == "levelNumLabel" {
+                    if let nm = node.name {
+                        if nm == "bg" || nm == "levelNumLabel" || nm == "scoreBoard" {
                             gameOverNext()
                         }
                     }
@@ -390,12 +395,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
         // maybe cancelled by a phone call or pressing home button
+        if touches != nil && event != nil {
+            touchesEnded(touches!, withEvent: event!)
+        }
     }
     
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
         //currentTimeStamp = currentTime
-
+        
         switch state {
         case .Ready:
             var pos = ballNode.position
@@ -404,7 +412,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             pos.y = pos.y >= screenHeidht - ballRadius ? screenHeidht - ballRadius : pos.y
             pos.y = pos.y <= menuHeight + ballRadius ? menuHeight + ballRadius : pos.y
             ballNode.position = pos
-            if isBallInArea(startNode, hard: true) {
+            if isBallInArea(startNode, hard: true) /*&& noOverlap()*/ {
                 buttonGo.runAction(SKAction(named: "fadeInButtonGo")!)
             } else {
                 buttonGo.runAction(SKAction(named: "fadeOutButtonGo")!)
@@ -417,7 +425,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     objIconTouchBeganTime = nil
                 }
             }
-
+            
+            if longPressObjIconUpdateRF && nowNode.position == CGPoint(x: 187.5, y: 384) {
+                updateRF()
+                longPressObjIconUpdateRF =  false
+            }
+            
             pastTimeStart = currentTime
         case .Dropping:
             if isBallInArea(endNode, hard: true) {
@@ -451,8 +464,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func didBeginContact(contact: SKPhysicsContact) {
+        print("start contact")
         let contactA: SKPhysicsBody = contact.bodyA
         let contactB: SKPhysicsBody = contact.bodyB
+        contactA.usesPreciseCollisionDetection = true
+        contactB.usesPreciseCollisionDetection = true
         
         var nodeA = contactA.node!
         var nodeB = contactB.node!
@@ -466,43 +482,54 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let categoryA = contactA.categoryBitMask
         let categoryB = contactB.categoryBitMask
         
-        // bounce
-        if categoryA == 1 && categoryB == 2 {
-            let bounceNode = nodeB as! Bounce
-            contactA.applyImpulse(contact.contactNormal * contact.collisionImpulse * bounceNode.k)
-        } else if categoryB == 1 && categoryA == 2 {
-            let bounceNode = nodeA as! Bounce
-            contactB.applyImpulse(contact.contactNormal * contact.collisionImpulse * bounceNode.k)
-        }
-        
-        // invisible obstacle
-        if categoryA == 1 && categoryB == 3 {
-            nodeB.parent!.runAction(SKAction(named: "fadeHitObstacle")!)
-        } else if categoryB == 1 && categoryA == 3 {
-            nodeA.parent!.runAction(SKAction(named: "fadeHitObstacle")!)
-        }
-        
-        // showing bounce functions at the state bar
-        if categoryB == 5 {
-            if contactB.node?.name == "smallBall1" {
-                bounceFunctionV1 = bounceFunctionV1! * (-1)
-                contactB.velocity = bounceFunctionV1!
-            } else if contactB.node?.name == "smallBall2" {
-                bounceFunctionV2 = bounceFunctionV2! * (-1)
-                contactB.velocity = bounceFunctionV2!
+        if state == .Dropping {
+            
+            // bounce
+            if categoryA == 1 && categoryB == 2 {
+                let bounceNode = nodeB as! Bounce
+                contactA.applyImpulse(contact.contactNormal * contact.collisionImpulse * bounceNode.k)
+            } else if categoryB == 1 && categoryA == 2 {
+                let bounceNode = nodeA as! Bounce
+                contactB.applyImpulse(contact.contactNormal * contact.collisionImpulse * bounceNode.k)
             }
-        } else if categoryA == 5 {
-            if contactB.node?.name == "smallBall1" {
-                bounceFunctionV1 = bounceFunctionV1! * (-1)
-                contactB.velocity = bounceFunctionV1!
-            } else if contactB.node?.name == "smallBall2" {
-                bounceFunctionV2 = bounceFunctionV2! * (-1)
-                contactB.velocity = bounceFunctionV2!
+            
+            // invisible obstacle
+            if categoryA == 1 && categoryB == 3 {
+                nodeB.parent!.runAction(SKAction(named: "fadeHitObstacle")!)
+            } else if categoryB == 1 && categoryA == 3 {
+                nodeA.parent!.runAction(SKAction(named: "fadeHitObstacle")!)
+            }
+            
+            // bounceI
+            if categoryA == 1 && categoryB == 16 {
+                let bounceNode = nodeB as! BounceI
+                contactA.applyImpulse(contact.contactNormal * bounceNode.k)
+            } else if categoryB == 1 && categoryA == 16 {
+                let bounceNode = nodeA as! BounceI
+                contactB.applyImpulse(contact.contactNormal * bounceNode.k)
+            }
+            
+        } else if state == .Ready {
+            
+            // showing bounce functions at the state bar
+            if categoryB == 5 {
+                if contactB.node?.name == "smallBall1" {
+                    bounceFunctionV1 = bounceFunctionV1! * (-1)
+                    contactB.velocity = bounceFunctionV1!
+                } else if contactB.node?.name == "smallBall2" {
+                    bounceFunctionV2 = bounceFunctionV2! * (-1)
+                    contactB.velocity = bounceFunctionV2!
+                }
+            } else if categoryA == 5 {
+                if contactB.node?.name == "smallBall1" {
+                    bounceFunctionV1 = bounceFunctionV1! * (-1)
+                    contactB.velocity = bounceFunctionV1!
+                } else if contactB.node?.name == "smallBall2" {
+                    bounceFunctionV2 = bounceFunctionV2! * (-1)
+                    contactB.velocity = bounceFunctionV2!
+                }
             }
         }
-        
-        //
-        
     }
     
     func isBallInArea(node: SKSpriteNode, hard: Bool) -> Bool {
@@ -517,17 +544,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func restart(levelN: Int) -> Void {
-        levelNode.removeAllChildren()
-        let levelPath = NSBundle.mainBundle().pathForResource("Level\(levelN)", ofType: "sks")
-        let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: levelPath!))
-        newLevel.name = "level\(levelN)"
-        levelNode.addChild(newLevel)
-        if state == .GameOverPass || state == .GameOverFailed {
-            menuNode.runAction(SKAction(named: "menuMoveDown")!)
+        if levelNode.children.count > 0 { levelNode.removeAllChildren() }
+        if let levelPath = NSBundle.mainBundle().pathForResource("Level\(levelN)", ofType: "sks") {
+            let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: levelPath))
+            newLevel.name = "level\(levelN)"
+            levelNode.addChild(newLevel)
+            if state == .GameOverPass || state == .GameOverFailed {
+                scoreBoardAndMenuMoveOut()
+            }
+            ballNode.hidden = false
+            initGame()
+        } else {
+            buttonHome.selectedHandler()
         }
-        ballNode.hidden = false
-        levelNode.hidden = false
-        initGame()
     }
     
     func isStatic(v: CGVector) -> Bool {
@@ -537,6 +566,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func gameOver() -> Void {
         if state == .Failed {
             state = .GameOverFailed
+            saveObjsState() // save the states of all objects to reload next time
             resultLabel.text = String(format: "%.3f", totalTime) + " Failed..."
         } else if state == .Pass {
             if nowLevelNum > passedLevelNum {
@@ -550,12 +580,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             return
         }
         ballNode.hidden = true
-        levelNode.hidden = true
-        menuNode.runAction(SKAction(named: "menuMoveUp")!)
+        ballNode.position = CGPoint(x: -50, y: 50)
+        levelNode.removeAllChildren()
+        scoreBoardAndMenuMoveIn()
     }
     
     func gameOverNext() -> Void {
-        menuNode.runAction(SKAction(named: "menuMoveDown")!)
+        scoreBoardAndMenuMoveOut()
+        
         if state == .GameOverPass {
             if nowLevelNum == levelNum {
                 passedAllLevels()
@@ -564,8 +596,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 nowLevelNum += 1
             }
         }
+        
         restart(nowLevelNum)
+        reloadObjsState()
         state = .Ready
+    }
+    
+    func scoreBoardAndMenuMoveIn() -> Void {
+        menuNode.runAction(SKAction(named: "menuMoveUp")!)
+        menuNode.physicsBody = SKPhysicsBody(rectangleOfSize: menuNode.size)
+        scoreBoard.physicsBody = SKPhysicsBody(rectangleOfSize: scoreBoard.size)
+        menuNode.physicsBody?.dynamic = false
+        menuNode.physicsBody?.affectedByGravity = false
+        scoreBoard.physicsBody?.dynamic = true
+        scoreBoard.physicsBody?.affectedByGravity = true
+    }
+    
+    func scoreBoardAndMenuMoveOut() -> Void {
+        scoreBoard.physicsBody = nil
+        let ani = SKAction.moveTo(CGPoint(x: screenWidth / 2, y: 872), duration: 0.6)
+        ani.timingMode = SKActionTimingMode.EaseOut
+        scoreBoard.runAction(ani)
+        menuNode.runAction(SKAction(named: "menuMoveDown")!)
+        menuNode.physicsBody = nil
     }
     
     func enableMultiTouch() -> Void {
@@ -577,6 +630,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func initGame() -> Void {
+        let initial = 1
+        
         let tt = SKTexture(imageNamed: "ballIcon")
         objIconNode.size = tt.size()
         objIconNode.texture = tt
@@ -608,7 +663,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         stateBar.alpha = 0
         stateBar.zPosition = 12
         stateBar.hidden = true
-        
         rotationNode.alpha = 0
         functionNode.alpha = 0
         
@@ -621,21 +675,42 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         obstacleLayer?.removeFromParent()
         
         nowNode.position = startNode.position // init position
-
         lastTouchLocation = ballNode.position
         lastTouchNodeLocation = ballNode.position
-
-        var n = 1
-        for obj in objNodes.children {
-            objNodeIndex[obj.children.first!.children.first!.name!] = n
+        
+        for (n, obj) in objNodes.children.enumerate() {
+            objNodeIndex[obj.name!] = n + 1
+            let zr = obj.zRotation
             let pos = obj.position
             obj.position = CGPoint(x: 0, y: 0)
+            obj.zRotation = 0
             obj.children.first!.children.first!.position = pos
-            n += 1
+            obj.children.first!.children.first!.zRotation = zr
         }
         
         passedLevelNum = defaults.integerForKey("passedLevelNum")
         totalTime = defaults.doubleForKey("totalTime")
+        
+        // make a tutorial if necessary
+        if let tutorial = self.tutorialLayer {
+            switch nowLevelNum {
+            case 1:
+                tutorialState = .Go
+            case 2:
+                tutorialState = .Icon
+            default:
+                break
+            }
+            
+            state = .Tutorial
+            for node in tutorial.children { node.alpha = 0 }
+            let bg = tutorial.childNodeWithName("tutorialBg") as! SKSpriteNode
+            bg.runAction(SKAction.afterDelay(0.4, performAction: SKAction.fadeInWithDuration(0.48)))
+            
+        }
+        
+        
+        
     }
     
     func passedAllLevels() -> Void {
@@ -671,16 +746,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func updateRF() -> Void {
-
+        
         var name = nowNode.parent?.parent?.name
-        if nowNode == ballNode {
-            name = "ball"
-        }
+        if nowNode == ballNode { name = "ball" }
+        if objs[name!] == nil { return }
         
         if let rf = Int(objs[name!]!["rf"]!) {
             let r = rf == 1 || rf == 3
             let f = rf > 1
-
+            
             let c: CGFloat = 100
             let d = CGFloat(Int(objs[nowNode.name!]!["halfWidth"]!)!) + 27
             let pos = nowNode.position
@@ -807,14 +881,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             rotationNode.position = rPos
             functionNode.position = fPos
-
+            
             if r {
                 rotationNode.runAction(SKAction(named: "fadeIn")!)
             }
             if f {
                 functionNode.runAction(SKAction(named: "fadeIn")!)
             }
-
+            
         }
     }
     
@@ -915,7 +989,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func objFunctionBegan() -> Void {
         
         stateBar.runAction(SKAction(named: "fadeInHide")!)
-
+        
         for child in nowNode.children {
             if let bm = child.physicsBody?.categoryBitMask {
                 switch Int(bm) {
@@ -1000,4 +1074,104 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    // no use
+    func noOverlap() -> Bool {
+        let objs = objNodes.children
+        for (i, obj) in objs.enumerate() {
+            for j in (i + 1) ..< objs.count {
+                let objA = obj.children.first!.children.first!
+                let objB = objs[j].children.first!.children.first!
+                for a in objA.children {
+                    for b in objB.children {
+                        if a.intersectsNode(b) {
+                            return false
+                        }
+                    }
+                }
+            }
+        }
+        
+        return true
+    }
+    
+    func saveObjsState() -> Void {
+        for obj in objNodes.children {
+            let name = obj.name!
+            let node = obj.children.first!.children.first!
+            objState.objPos[name] = node.position
+            objState.objClass[name] = node
+        }
+    }
+    
+    func reloadObjsState() -> Void {
+        if objState.levelNum != nowLevelNum { return }
+        print(objState)
+        ballNode.position = objState.objPos[ballNode.name!]!
+        
+        for obj in objNodes.children {
+            let name = obj.name!
+            let node = obj.children.first!.children.first!
+            let objNode = objState.objClass[name]!
+            let child = objNode.children.first!
+            obj.children.first!.children.first!.position = objState.objPos[name]!
+            obj.children.first!.children.first!.zRotation = objNode.zRotation
+            if let bm = child.physicsBody?.categoryBitMask {
+                switch Int(bm) {
+                case 2:
+                    if let bounce = child as? Bounce {
+                        let t = node.children.first! as! Bounce
+                        t.k = bounce.k
+                    }
+                case 4:
+                    if let shortStick = child as? ShortStick {
+                        let t = node.children.first! as! ShortStick
+                        t.direction = shortStick.direction
+                    }
+                case 8:
+                    if let stick = child as? Stick {
+                        let t = node.children.first! as! Stick
+                        t.xScale = stick.xScale
+                    }
+                case 16:
+                    break // bounceI
+                default:
+                    break
+                }
+            }
+        }
+    }
+    
+    func addTouchIconAtPoint(pos: CGPoint) -> Void {
+        if let path = NSBundle.mainBundle().pathForResource("TouchIcon", ofType: "sks") {
+            
+            let touchIcon = SKReferenceNode(URL: NSURL(fileURLWithPath: path))
+            touchIcon.name = "touchIcon"
+            touchIcon.position = pos
+            touchIcon.zPosition = 28
+            self.tutorialLayer!.addChild(touchIcon)
+            
+            let movingDistance = 168
+            
+            let touchOut = touchIcon.childNodeWithName("//touchOut") as! SKSpriteNode
+            touchOut.xScale = 2
+            touchOut.yScale = 2
+            touchOut.alpha = 0.6
+            let touchScale0 = SKAction.scaleTo(0.7, duration: 1)
+            let touchScale2 = SKAction.scaleTo(2, duration: 0.2)
+            let touchDelay1 = SKAction.waitForDuration(0.7)
+            let touchDelay2 = SKAction.waitForDuration(0.5)
+            let touchAction = SKAction.sequence([touchScale0, touchDelay2, touchScale2, touchDelay1])
+            touchAction.timingMode = SKActionTimingMode.EaseInEaseOut
+            
+            let touchFadeIn = SKAction.fadeInWithDuration(0.3)
+            let touchMove = SKAction.moveBy(CGVector(dx: movingDistance, dy: 0), duration: 1)
+            let touchFadeOut = SKAction.fadeOutWithDuration(0.5)
+            let touchMoveBack = SKAction.moveBy(CGVector(dx: -movingDistance, dy: 0), duration: 0.6)
+            let touchMF = SKAction.sequence([touchMove, touchFadeOut, touchMoveBack, touchFadeIn])
+            touchMF.timingMode = SKActionTimingMode.EaseInEaseOut
+            
+            touchOut.runAction(SKAction.repeatActionForever(touchAction))
+            touchIcon.runAction(SKAction.repeatActionForever(touchMF))
+        }
+    }
 }
