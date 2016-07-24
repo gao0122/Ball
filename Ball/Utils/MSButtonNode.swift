@@ -56,7 +56,10 @@ class MSButtonNode: SKSpriteNode {
         
         /* Enable touch on button node */
         self.userInteractionEnabled = true
-        
+    }
+    
+    override init(texture: SKTexture?, color: UIColor, size: CGSize) {
+        super.init(texture: texture, color: color, size: size)
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {

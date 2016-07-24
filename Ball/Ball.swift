@@ -13,65 +13,68 @@ class Ball: SKSpriteNode {
     let objName = "The ball"
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        let gameScene = self.parent as! GameScene
-        switch gameScene.state {
-        case .Ready:
-            if touches.count == 1 {
-                gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
-                gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
-                if gameScene.nowNode != self {
-                    gameScene.nowNode = self
-                    gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
-                }
-            }
-        case .Dropping:
-            break
-        default:
-            break
-        }
-    }
-    
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        let gameScene = self.parent as! GameScene
-        if gameScene.nowNode == self {
+        if let gameScene = self.scene as? GameScene {
             switch gameScene.state {
             case .Ready:
                 if touches.count == 1 {
-                    gameScene.disableMultiTouch()
                     gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
                     gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
-                    for touch in touches {
-                        self.position = touch.locationInNode(gameScene)
+                    if gameScene.nowNode != self {
+                        gameScene.nowNode = self
+                        gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
                     }
                 }
             case .Dropping:
                 break
             default:
                 break
-                
+            }
+        }
+    }
+    
+    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        if let gameScene = self.scene as? GameScene {
+            if gameScene.nowNode == self {
+                switch gameScene.state {
+                case .Ready:
+                    if touches.count == 1 {
+                        gameScene.disableMultiTouch()
+                        gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                        gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                        for touch in touches {
+                            self.position = touch.locationInNode(gameScene)
+                        }
+                    }
+                case .Dropping:
+                    break
+                default:
+                    break
+                    
+                }
             }
         }
     }
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        let gameScene = self.parent as! GameScene
-        if gameScene.nowNode == self {
-            switch gameScene.state {
-            case .Ready:
-                if touches.count == 1 {
-                    for touch in touches {
-                        gameScene.lastTouchNodeLocation = position
-                        gameScene.lastTouchLocation = touch.locationInNode(gameScene)
-                        gameScene.updateRF()
+        if let gameScene = self.scene as? GameScene {
+            if gameScene.nowNode == self {
+                switch gameScene.state {
+                case .Ready:
+                    if touches.count == 1 {
+                        for touch in touches {
+                            gameScene.lastTouchNodeLocation = position
+                            gameScene.lastTouchLocation = touch.locationInNode(gameScene)
+                            gameScene.updateRF()
+                        }
                     }
+                case .Dropping:
+                    break
+                default:
+                    break
                 }
-            case .Dropping:
-                break
-            default:
-                break
             }
+            gameScene.enableMultiTouch()
         }
-        gameScene.enableMultiTouch()
     }
     
     required init?(coder aDecoder: NSCoder) {

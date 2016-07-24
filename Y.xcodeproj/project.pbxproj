@@ -35,7 +35,7 @@
 		009E44A21D3030A600F8B596 /* ShortStick.sks in Resources */ = {isa = PBXBuildFile; fileRef = 009E44941D3030A600F8B596 /* ShortStick.sks */; };
 		00ADCDC31D31F85F0070632B /* Level2.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00ADCDC01D31F85F0070632B /* Level2.sks */; };
 		00ADCDC41D31F85F0070632B /* Level3.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00ADCDC11D31F85F0070632B /* Level3.sks */; };
-		00ADCDC51D31F85F0070632B /* Level4.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00ADCDC21D31F85F0070632B /* Level4.sks */; };
+		00ADCDC51D31F85F0070632B /* Level14.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00ADCDC21D31F85F0070632B /* Level14.sks */; };
 		00C2B9871D36A25F0052841C /* TheObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00C2B9861D36A25F0052841C /* TheObjects.swift */; };
 		00C60DC31D30417B00BF262D /* MSButtonNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00C60DB41D30417B00BF262D /* MSButtonNode.swift */; };
 		00C60DC41D30417B00BF262D /* MSReferenceNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00C60DB51D30417B00BF262D /* MSReferenceNode.swift */; };
@@ -56,6 +56,11 @@
 		00CEF9431D3F1D3500C7B211 /* Level8.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00CEF9421D3F1D3500C7B211 /* Level8.sks */; };
 		00D580FF1D32FADB00702DBE /* AnimationActions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00D580FE1D32FADB00702DBE /* AnimationActions.sks */; };
 		00EDFA751D3B3FF9009B3C13 /* Setting.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00EDFA741D3B3FF9009B3C13 /* Setting.sks */; };
+		00F806371D429B62009AC57B /* Level11.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00F806351D429B62009AC57B /* Level11.sks */; };
+		00F806381D429B62009AC57B /* Level12.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00F806361D429B62009AC57B /* Level12.sks */; };
+		00F8063B1D429CD8009AC57B /* Level4.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00F806391D429CD8009AC57B /* Level4.sks */; };
+		00F8063C1D429CD8009AC57B /* Level15.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00F8063A1D429CD8009AC57B /* Level15.sks */; };
+		00F8063E1D429CE1009AC57B /* Level13.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00F8063D1D429CE1009AC57B /* Level13.sks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,7 +94,7 @@
 		009E44941D3030A600F8B596 /* ShortStick.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = ShortStick.sks; sourceTree = "<group>"; };
 		00ADCDC01D31F85F0070632B /* Level2.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level2.sks; sourceTree = "<group>"; };
 		00ADCDC11D31F85F0070632B /* Level3.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level3.sks; sourceTree = "<group>"; };
-		00ADCDC21D31F85F0070632B /* Level4.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level4.sks; sourceTree = "<group>"; };
+		00ADCDC21D31F85F0070632B /* Level14.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level14.sks; sourceTree = "<group>"; };
 		00C2B9861D36A25F0052841C /* TheObjects.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TheObjects.swift; sourceTree = "<group>"; };
 		00C60DB41D30417B00BF262D /* MSButtonNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MSButtonNode.swift; sourceTree = "<group>"; };
 		00C60DB51D30417B00BF262D /* MSReferenceNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MSReferenceNode.swift; sourceTree = "<group>"; };
@@ -110,6 +115,11 @@
 		00CEF9421D3F1D3500C7B211 /* Level8.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level8.sks; sourceTree = "<group>"; };
 		00D580FE1D32FADB00702DBE /* AnimationActions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = AnimationActions.sks; sourceTree = "<group>"; };
 		00EDFA741D3B3FF9009B3C13 /* Setting.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Setting.sks; sourceTree = "<group>"; };
+		00F806351D429B62009AC57B /* Level11.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level11.sks; sourceTree = "<group>"; };
+		00F806361D429B62009AC57B /* Level12.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level12.sks; sourceTree = "<group>"; };
+		00F806391D429CD8009AC57B /* Level4.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level4.sks; sourceTree = "<group>"; };
+		00F8063A1D429CD8009AC57B /* Level15.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level15.sks; sourceTree = "<group>"; };
+		00F8063D1D429CE1009AC57B /* Level13.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level13.sks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -208,13 +218,18 @@
 				009E448E1D3030A600F8B596 /* Level1.sks */,
 				00ADCDC01D31F85F0070632B /* Level2.sks */,
 				00ADCDC11D31F85F0070632B /* Level3.sks */,
-				00ADCDC21D31F85F0070632B /* Level4.sks */,
+				00F806391D429CD8009AC57B /* Level4.sks */,
 				004974561D3DDC8800B9F3B1 /* Level5.sks */,
 				00CEF93E1D3EFEC300C7B211 /* Level6.sks */,
 				00CEF9401D3F18C500C7B211 /* Level7.sks */,
 				00CEF9421D3F1D3500C7B211 /* Level8.sks */,
 				003A83281D3F1FA60035F1A7 /* Level9.sks */,
 				003A832A1D3F20A60035F1A7 /* Level10.sks */,
+				00F806351D429B62009AC57B /* Level11.sks */,
+				00F806361D429B62009AC57B /* Level12.sks */,
+				00F8063D1D429CE1009AC57B /* Level13.sks */,
+				00ADCDC21D31F85F0070632B /* Level14.sks */,
+				00F8063A1D429CD8009AC57B /* Level15.sks */,
 			);
 			name = levels;
 			sourceTree = "<group>";
@@ -320,6 +335,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				00519A561D41A94B00468369 /* TouchIcon.sks in Resources */,
+				00F8063E1D429CE1009AC57B /* Level13.sks in Resources */,
 				009E44A01D3030A600F8B596 /* Home.sks in Resources */,
 				000AB5DF1D302F0500D75C33 /* LaunchScreen.storyboard in Resources */,
 				003A83291D3F1FA60035F1A7 /* Level9.sks in Resources */,
@@ -330,18 +346,22 @@
 				003A832B1D3F20A60035F1A7 /* Level10.sks in Resources */,
 				000AB5E71D302F0D00D75C33 /* assets.atlas in Resources */,
 				00CEF93F1D3EFEC300C7B211 /* Level6.sks in Resources */,
+				00F806381D429B62009AC57B /* Level12.sks in Resources */,
 				004974571D3DDC8800B9F3B1 /* Level5.sks in Resources */,
 				009E449A1D3030A600F8B596 /* Level.sks in Resources */,
 				009E44951D3030A600F8B596 /* Bounce.sks in Resources */,
 				00EDFA751D3B3FF9009B3C13 /* Setting.sks in Resources */,
 				00ADCDC41D31F85F0070632B /* Level3.sks in Resources */,
+				00F8063B1D429CD8009AC57B /* Level4.sks in Resources */,
 				00CEF9431D3F1D3500C7B211 /* Level8.sks in Resources */,
 				009C82821D3DF54A00033044 /* BounceI.sks in Resources */,
+				00F8063C1D429CD8009AC57B /* Level15.sks in Resources */,
 				009E44971D3030A600F8B596 /* GameScene.sks in Resources */,
 				000AB5DA1D302F0500D75C33 /* Main.storyboard in Resources */,
 				0040FAB51D344DCE00B06CF5 /* Stick.sks in Resources */,
 				00ADCDC31D31F85F0070632B /* Level2.sks in Resources */,
-				00ADCDC51D31F85F0070632B /* Level4.sks in Resources */,
+				00ADCDC51D31F85F0070632B /* Level14.sks in Resources */,
+				00F806371D429B62009AC57B /* Level11.sks in Resources */,
 				009E44A21D3030A600F8B596 /* ShortStick.sks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

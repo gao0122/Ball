@@ -39,7 +39,11 @@ class Level: SKScene {
         
         passedLevelNum = defaults.integerForKey("passedLevelNum") ?? 0
         totalTime = defaults.doubleForKey("totalTime") ?? 0
-
+        
+        if !defaults.boolForKey("unlockedAll") {
+            defaults.setBool(true, forKey: "unlockedAll")
+        }
+        
         for n in 1...levelNum {
             let levelName = "level\(n)"
             if let level = self.childNodeWithName(levelName) as? SKLabelNode {
@@ -105,23 +109,24 @@ class Level: SKScene {
     
     func moveToLevelN(n: Int, name: String!) -> Void {
         if let path = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks") {
-            let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: path))
+            weak var newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: path)).children.first!
+            weak var scene = GameScene(fileNamed: "GameScene") as GameScene!
 
-            let scene = GameScene(fileNamed: "GameScene") as GameScene!
+            newLevel!.name = name
+            /* Set the scale mode to scale to fit the window */
+            scene!.scaleMode = .AspectFill
+            
+            scene!.childNodeWithName("levelNode")!.addChild(newLevel!)
+            scene!.nowLevelNum = n
+
             let skView = self.view as SKView!
             
             /* Sprite Kit applies additional optimizations to improve rendering performance */
             skView.ignoresSiblingOrder = true
             skView.showsPhysics = showPhy
             skView.showsNodeCount = showNodes
-            /* Set the scale mode to scale to fit the window */
-            scene.scaleMode = .AspectFill
             
-            newLevel.name = name
-            scene.childNodeWithName("levelNode")!.addChild(newLevel)
-            scene.nowLevelNum = n
-            
-            skView.presentScene(scene, transition: SKTransition.crossFadeWithDuration(0.7))
+            skView.presentScene(scene!, transition: SKTransition.crossFadeWithDuration(0.7))
             chosen = true
         }
     }
