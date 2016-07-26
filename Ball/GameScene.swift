@@ -13,7 +13,7 @@ enum GameState {
 }
 
 enum TutorialState {
-    case Done, Go, Icon, TouchMoving, Function, Rotation, Bounce
+    case Done, Go, Icon, IntroIcon, TouchMoving, Function, Rotation, Bounce
 }
 
 struct ObjState {
@@ -44,6 +44,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    var level: Level!
+    var home: Home!
+    
     var ballNode: Ball!
     var levelNode: SKNode!
     var startNode: SKSpriteNode!
@@ -70,7 +73,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             updateRF()
         }
     }
-    var menuNode: SKSpriteNode!
+    var menuNode: SKNode!
     var buttonHome: MSButtonNode!
     var buttonRestart: MSButtonNode!
     var buttonGo: MSButtonNode!
@@ -127,12 +130,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var objState: ObjState!
 
-    var levelTutorial: [Int: [TutorialState]] = [
-        1: [.Done, .Icon, .Go],
+    let levelTutorialStates: [Int: [TutorialState]] = [
+        1: [.Done, .TouchMoving, .IntroIcon, .Icon],
         2: [.Done],
         3: [.Done],
         4: [.Done]
     ]
+    var levelTutorial: [Int: [TutorialState]]!
+    
     var tutorialState: TutorialState = .Done {
         didSet {
             self.childNodeWithName("//tutorialHelp")?.removeFromParent()
@@ -142,8 +147,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 tutorialGo()
             case .Icon:
                 tutorialIcon()
+            case .IntroIcon:
+                introIconActions()
             case .TouchMoving:
-                tutorialTouchMoving(CGPoint(x: 100, y: 300))
+                tutorialTouchMoving(CGPoint(x: 100, y: 220))
             default:
                 tutorialLayerBg?.removeFromParent()
             }
@@ -162,7 +169,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // node connection
         ballNode = self.childNodeWithName("ball") as! Ball
         levelNode = self.childNodeWithName("levelNode")
-        menuNode = self.childNodeWithName("menu") as! SKSpriteNode
+        menuNode = self.childNodeWithName("menu")!
         buttonHome = menuNode.childNodeWithName("buttonHome") as! MSButtonNode
         buttonRestart = menuNode.childNodeWithName("buttonRestart") as! MSButtonNode
         buttonGo = menuNode.childNodeWithName("buttonGo") as! MSButtonNode
@@ -178,19 +185,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         stateBar = menuNode.childNodeWithName("stateBar") as! SKSpriteNode
         scoreBoard = self.childNodeWithName("scoreBoard") as! SKSpriteNode
         
+        menuNode.childNodeWithName("menuBgd")!.alpha = 0.892
+        
+        levelTutorial = levelTutorialStates
+        
         objNodeIndex["ball"] = 0
         objState = ObjState.init(levelNum: self.nowLevelNum)
         initGame()
         
         buttonHome.selectedHandler = {
-            weak var scene = Level(fileNamed: "Level")
-            if scene != nil {
-                scene!.scaleMode = .AspectFill
-                let skView = self.view as SKView!
-                /* Sprite Kit applies additional optimizations to improve rendering performance */
-                skView.ignoresSiblingOrder = true
-                skView.presentScene(scene!, transition: SKTransition.doorwayWithDuration(0.8))
-            }
+            let skView = self.view as SKView!
+            self.level.scaleMode = .AspectFill
+            
+            /* Sprite Kit applies additional optimizations to improve rendering performance */
+            skView.ignoresSiblingOrder = true
+            skView.presentScene(self.level, transition: SKTransition.doorwayWithDuration(0.8))
         }
         buttonRestart.selectedHandler = {
             self.restart(self.nowLevelNum)
@@ -201,7 +210,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             } else if self.state == .Ready {
                 if self.isBallInArea(self.startNode, hard: true) {
                     //self.objNodes.children.obj.children.first!.children.first!.children
-                   
                     if self.tutorialState == .Done {
                         self.buttonGoSelector()
                     }
@@ -403,6 +411,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         switch state {
         case .Ready:
+            if tutorialState == .TouchMoving {
+                if let help = self.childNodeWithName("//tutorialHelp") {
+                    
+                }
+                break
+            }
+            
             var pos = ballNode.position
             pos.x = pos.x <= ballRadius ? ballRadius : pos.x
             pos.x = pos.x >= screenWidth - ballRadius ? screenWidth - ballRadius : pos.x
@@ -541,13 +556,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func restart(levelN: Int) -> Void {
         if levelNode.children.count > 0 { levelNode.removeAllChildren() }
-        if let levelPath = NSBundle.mainBundle().pathForResource("Level\(levelN)", ofType: "sks") {
-            let newLevel = SKReferenceNode(URL: NSURL(fileURLWithPath: levelPath))
-            newLevel.name = "level\(levelN)"
-            levelNode.addChild(newLevel)
+        
+        if levelN <= levelNum {
             if state == .GameOverPass || state == .GameOverFailed {
                 scoreBoardAndMenuMoveOut()
             }
+            
+            let newLevel = level.refLevels[levelN]!.copy() as! SKReferenceNode
+            levelNode.addChild(newLevel)
             ballNode.hidden = false
             initGame()
         } else {
@@ -599,21 +615,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func scoreBoardAndMenuMoveIn() -> Void {
-        menuNode.runAction(SKAction(named: "menuMoveUp")!)
-        menuNode.physicsBody = SKPhysicsBody(rectangleOfSize: menuNode.size)
-        scoreBoard.physicsBody = SKPhysicsBody(rectangleOfSize: scoreBoard.size)
-        menuNode.physicsBody?.dynamic = false
-        menuNode.physicsBody?.affectedByGravity = false
-        scoreBoard.physicsBody?.dynamic = true
-        scoreBoard.physicsBody?.affectedByGravity = true
-        
-        let tapTodo = scoreBoard.childNodeWithName("tapTodo") as! SKLabelNode
-        if nowLevelNum < 5 {
-            tapTodo.removeAllActions()
-            tapTodo.runAction(SKAction(named: "fadeInAndOut")!)
-        } else {
-            tapTodo.removeAllActions()
-            tapTodo.runAction(SKAction.fadeOutWithDuration(0.1))
+        if let menuNode = menuNode.childNodeWithName("menuBgd") as? SKSpriteNode {
+            self.menuNode.runAction(SKAction(named: "menuMoveUp")!)
+            menuNode.physicsBody = SKPhysicsBody(rectangleOfSize: menuNode.size)
+            menuNode.physicsBody?.dynamic = false
+            menuNode.physicsBody?.affectedByGravity = false
+            scoreBoard.physicsBody = SKPhysicsBody(rectangleOfSize: scoreBoard.size)
+            scoreBoard.physicsBody?.dynamic = true
+            scoreBoard.physicsBody?.affectedByGravity = true
+            
+            let tapTodo = scoreBoard.childNodeWithName("tapTodo") as! SKLabelNode
+            if nowLevelNum < 5 {
+                tapTodo.removeAllActions()
+                tapTodo.runAction(SKAction(named: "fadeInAndOut")!)
+            } else {
+                tapTodo.removeAllActions()
+                tapTodo.runAction(SKAction.fadeOutWithDuration(0.1))
+            }
         }
     }
     
@@ -628,7 +646,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ani.timingMode = SKActionTimingMode.EaseOut
         scoreBoard.runAction(ani)
         menuNode.runAction(SKAction(named: "menuMoveDown")!)
-        menuNode.physicsBody = nil
+        menuNode.childNodeWithName("menuBgd")!.physicsBody = nil
     }
     
     func enableMultiTouch() -> Void {
@@ -650,7 +668,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if nowLevelNum < 10 {
             levelNumLabel.fontSize = 666
             levelNumLabel.position = CGPoint(x: screenWidth / 2, y: 134)
-        } else if nowLevelNum > 100 {
+        } else if nowLevelNum < 100 {
             levelNumLabel.fontSize = 384
             levelNumLabel.position = CGPoint(x: screenWidth / 2, y: 250)
         } else if nowLevelNum < 1000 {
@@ -675,7 +693,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         stateBar.hidden = true
         rotationNode.alpha = 0
         functionNode.alpha = 0
-        
+ 
         timeLabel.text = "0.000"
         bestTime = defaults.doubleForKey("best\(nowLevelNum)") ?? 0
         objNodes = levelNode.childNodeWithName("//objNodes")
@@ -689,19 +707,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         nowNode.position = startNode.position // init position
         lastTouchLocation = ballNode.position
         lastTouchNodeLocation = ballNode.position
+                
+        passedLevelNum = defaults.integerForKey("passedLevelNum")
+        totalTime = defaults.doubleForKey("totalTime")
         
         for (n, obj) in objNodes.children.enumerate() {
             objNodeIndex[obj.name!] = n + 1
             let zr = obj.zRotation
             let pos = obj.position
-            obj.position = CGPoint(x: 0, y: 0)
-            obj.zRotation = 0
-            obj.children.first!.children.first!.position = pos
-            obj.children.first!.children.first!.zRotation = zr
+            let zero = CGPoint(x: 0, y: 0)
+            if obj.position != zero {
+                obj.position = zero
+                obj.children.first!.children.first!.position = pos
+                obj.zRotation = 0
+                obj.children.first!.children.first!.zRotation = zr
+            }
         }
-        
-        passedLevelNum = defaults.integerForKey("passedLevelNum")
-        totalTime = defaults.doubleForKey("totalTime")
         
         // make a tutorial if necessary
         if let tutorial = self.tutorialLayer {
@@ -719,7 +740,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 tutorialLayerBg!.runAction(SKAction.afterDelay(0.4, performAction: SKAction.fadeInWithDuration(0.48)))
             }
         }
-
+        
     }
     
     func buttonGoSelector() -> Void {
@@ -1209,18 +1230,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let touchFadeTo2 = SKAction.fadeAlphaTo(0.2, duration: 1)
             let touchFadeTo6 = SKAction.fadeAlphaTo(0.6, duration: 1)
             
-            let touchDelay = SKAction.waitForDuration(2.4)
+            let touchDelay = SKAction.waitForDuration(1.8)
             let touchFade = SKAction.sequence([touchFadeTo4, touchFadeTo8, touchFadeTo2, touchFadeTo6])
-            let touchAction = SKAction.sequence([touchFade, touchFadeOut, touchFade.reversedAction(), touchFadeIn, touchDelay])
+            let touchAction = SKAction.sequence([touchFade, touchFadeOut, touchFade, touchFadeIn, touchDelay])
             touchAction.timingMode = SKActionTimingMode.EaseInEaseOut
 
             let handIcon = SKSpriteNode(imageNamed: "oneFinger")
             touchIcon.addChild(handIcon)
-            handIcon.position = CGPoint(x: 8, y: -54)
-            
+            handIcon.position = CGPoint(x: 8, y: -56)
             touchIn.runAction(SKAction.repeatActionForever(touchAction))
-            handIcon.runAction(SKAction.repeatActionForever(touchMF))
+            touchIcon.runAction(SKAction.repeatActionForever(touchMF))
         }
+    }
+    
+    func introIconActions() -> Void {
+        
     }
     
     func introLabelActions() -> Void {
@@ -1246,10 +1270,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func tutorialGo() -> Void {
-        if nowLevelNum == 1 {
-            introLabelActions()
-        }
-        
         let btnGo = buttonGo.copy() as! MSButtonNode
         self.addChild(btnGo)
         btnGo.name = "tutorialHelp"
@@ -1258,7 +1278,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         btnGo.xScale = buttonGo.xScale
         btnGo.yScale = buttonGo.yScale
         btnGo.zPosition = 50
-        btnGo.runAction(SKAction(named: "scaleToTouch")!)
+        btnGo.runAction(SKAction(named: "scaleToTouch1")!)
         btnGo.selectedHandler = {
             self.tutorialLayerBg!.runAction(SKAction.fadeOutWithDuration(0.32))
             self.buttonGoSelector()
@@ -1267,6 +1287,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func tutorialIcon() -> Void {
+        if nowLevelNum == 1 {
+            introLabelActions()
+        }
+        
         let label = SKLabelNode(text: "Tap to change current object")
         menuNode.addChild(label)
         label.name = "tutorialHelp"
@@ -1285,15 +1309,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         objIcon.alpha = 0
         objIcon.zPosition = 50
         objIcon.position = CGPoint(x: 0, y: -57)
-        objIcon.runAction(SKAction(named: "scaleToTouch1")!)
+        objIcon.runAction(SKAction(named: "scaleToTouch")!)
         objIcon.selectedHandler = {
             self.tutorialLayerBg!.runAction(SKAction.fadeOutWithDuration(0.32))
             self.buttonObjIconSelector()
-            self.tutorialState = .TouchMoving
+            self.tutorialState = self.levelTutorial[self.nowLevelNum]?.popLast() ?? .Done
         }
         
         label.alpha = 0
-        label.runAction(SKAction.afterDelay(0.6, performAction: SKAction.fadeInWithDuration(0.4)))
+        label.runAction(SKAction.afterDelay(10, performAction: SKAction.fadeInWithDuration(0.4)))
     }
     
 }

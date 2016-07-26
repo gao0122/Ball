@@ -12,8 +12,7 @@ class TheObjects: SKSpriteNode {
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
-            switch gameScene.state {
-            case .Ready:
+            if gameScene.state == .Ready && gameScene.tutorialState == .Done {
                 if touches.count == 1 {
                     gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
                     gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
@@ -22,10 +21,6 @@ class TheObjects: SKSpriteNode {
                         gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
                     }
                 }
-            case .Dropping:
-                break
-            default:
-                break
             }
         }
     }
@@ -33,8 +28,7 @@ class TheObjects: SKSpriteNode {
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
             if gameScene.nowNode == self.parent! {
-                switch gameScene.state {
-                case .Ready:
+                if gameScene.state == .Ready && gameScene.tutorialState == .Done {
                     if touches.count == 1 {
                         gameScene.disableMultiTouch()
                         gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
@@ -44,10 +38,6 @@ class TheObjects: SKSpriteNode {
                             self.parent!.position = touch.locationInNode(self.parent!.parent!)
                         }
                     }
-                case .Dropping:
-                    break
-                default:
-                    break
                 }
             }
         }
@@ -56,8 +46,7 @@ class TheObjects: SKSpriteNode {
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
             if gameScene.nowNode == self.parent! {
-                switch gameScene.state {
-                case .Ready:
+                if gameScene.state == .Ready && gameScene.tutorialState == .Done {
                     if touches.count == 1 {
                         for touch in touches {
                             gameScene.lastTouchNodeLocation = self.parent!.position
@@ -65,10 +54,6 @@ class TheObjects: SKSpriteNode {
                             gameScene.updateRF()
                         }
                     }
-                case .Dropping:
-                    break
-                default:
-                    break
                 }
             }
             gameScene.enableMultiTouch()
@@ -79,5 +64,5 @@ class TheObjects: SKSpriteNode {
         super.init(coder: aDecoder)
         userInteractionEnabled = true
     }
-    
+
 }

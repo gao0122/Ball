@@ -17,7 +17,6 @@ class Stick: TheObjects {
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        userInteractionEnabled = true
     }
     
 }
