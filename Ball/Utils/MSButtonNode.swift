@@ -57,7 +57,7 @@ class MSButtonNode: SKSpriteNode {
         clickable = true
         longTouched = false
         if let name = self.name {
-            if name == "objIcon" {
+            if name == "objIcon" || name == "tutorialIconLongPress" {
                 if let scene = self.scene as? GameScene {
                     scene.objIconTouchBeganTime = touches.first!.timestamp
                 }
@@ -74,12 +74,9 @@ class MSButtonNode: SKSpriteNode {
             if !longTouched {
                 if let scene = self.scene as? GameScene {
                     scene.objIconTouchBeganTime = nil
-                    selectedHandler()
-                    state = .MSButtonNodeStateActive
-                } else {
-                    selectedHandler()
-                    state = .MSButtonNodeStateActive
                 }
+                selectedHandler()
+                state = .MSButtonNodeStateActive
             }
         }
     }
@@ -88,8 +85,8 @@ class MSButtonNode: SKSpriteNode {
         clickable = false
         if let scene = self.scene as? GameScene {
             if !scene.touched {
-                if scene.state == .Ready && scene.tutorialState == .Done {
-
+                if scene.state == .Ready &&
+                    (scene.tutorialState == .Done || scene.tutorialState == .IconLongPress) {
                     // iconLongPressAction
                     scene.nowNode.runAction(SKAction(named: "moveToCenter")!)
                     scene.lastTouchNodeLocation = CGPoint(x: scene.screenWidth / 2, y: 384)
@@ -103,6 +100,11 @@ class MSButtonNode: SKSpriteNode {
                     }
                     if scene.rotationNode.alpha != 0 {
                         scene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                    }
+                    
+                    if scene.tutorialState == .IconLongPress {
+                        scene.tutorialLayerBg?.runAction(SKAction.fadeOutWithDuration(0.32))
+                        scene.popLastTutorialState()
                     }
                 }
             }
