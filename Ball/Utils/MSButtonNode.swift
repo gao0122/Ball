@@ -28,21 +28,11 @@ class MSButtonNode: SKSpriteNode {
             switch state {
             case .MSButtonNodeStateActive:
                 /* Enable touch */
-                self.userInteractionEnabled = true
-                
-                /* Visible */
-                self.alpha = 1
                 break
             case .MSButtonNodeStateSelected:
                 // become larger
-                
                 break
-            case .MSButtonNodeStateHidden:
-                /* Disable touch */
-                self.userInteractionEnabled = false
-                
-                /* Hide */
-                self.alpha = 0
+            default:
                 break
             }
         }

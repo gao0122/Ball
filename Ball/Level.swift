@@ -14,7 +14,7 @@ class Level: SKScene {
     
     let screenHeight: CGFloat = 667
     
-    var gameScene: GameScene! = GameScene(fileNamed: "GameScene") as GameScene!
+    var gameScene: GameScene!
     var home: Home!
     
     var chosen = false
@@ -39,9 +39,8 @@ class Level: SKScene {
         chosen = false
 
         /* Set the scale mode to scale to fit the window */
-        gameScene.scaleMode = .AspectFill
+        gameScene.scaleMode = scaleMode
         if gameScene.level == nil { gameScene.level = self }
-        if gameScene.home == nil { gameScene.home = home }
         gameLevelNode = gameScene.childNodeWithName("levelNode")!
         
         homeNode = childNodeWithName("homeNode")!
@@ -105,7 +104,7 @@ class Level: SKScene {
             /* Sprite Kit applies additional optimizations to improve rendering performance */
             skView.showsPhysics = showPhy
             skView.ignoresSiblingOrder = true
-            home.scaleMode = .AspectFill
+            home.scaleMode = scaleMode
             skView.presentScene(home)
             camera?.position.y = screenHeight / 2
         }

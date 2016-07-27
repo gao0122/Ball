@@ -14,7 +14,7 @@ class Home: SKScene {
     let screenWidth:CGFloat = 375
     
     var level: Level! = Level(fileNamed: "Level") as Level!
-    var gameScene: GameScene!
+    var gameScene: GameScene! = GameScene(fileNamed: "GameScene") as GameScene!
     var defaults: NSUserDefaults!
     
     var buttonPlay: SKLabelNode!
@@ -26,6 +26,9 @@ class Home: SKScene {
         
         buttonPlay = childNodeWithName("buttonPlay") as! SKLabelNode
         
+        if gameScene.home == nil { gameScene.home = self }
+        if gameScene.level == nil { gameScene.level = level }
+
         if fromGameScenePassedAll {
             //print("passed all!")
         }
@@ -49,9 +52,10 @@ class Home: SKScene {
             skView.ignoresSiblingOrder = true
             
             /* Set the scale mode to scale to fit the window */
-            level.scaleMode = .AspectFill
+            level.scaleMode = scaleMode
 
             if level.home == nil { level.home = self }
+            if level.gameScene == nil { level.gameScene = gameScene }
             
             skView.presentScene(level)
             

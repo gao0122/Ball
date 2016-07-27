@@ -11,6 +11,7 @@ import SpriteKit
 
 let showPhy = false
 let showNodes = false
+let scaleMode: SKSceneScaleMode = .AspectFit
 
 class GameViewController: UIViewController {
 
@@ -25,14 +26,14 @@ class GameViewController: UIViewController {
             skView.ignoresSiblingOrder = true
             skView.showsPhysics = showPhy
             skView.showsNodeCount = showNodes
-            scene.scaleMode = .AspectFit
+            scene.scaleMode = scaleMode
 
             skView.presentScene(scene)
         }
     }
 
     override func shouldAutorotate() -> Bool {
-        return true
+        return false
     }
 
     override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
