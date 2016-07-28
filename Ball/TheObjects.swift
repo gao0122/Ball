@@ -21,7 +21,22 @@ class TheObjects: SKSpriteNode {
                         gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
                     }
                 }
+            } else if gameScene.tutorialState == .TapBounce {
+                if touches.count == 1 {
+                    let touch = touches.first!
+                    let node = nodeAtPoint(touch.locationInNode(self)).parent
+                    if let name = node?.name {
+                        if name == "bounce" {
+                            node?.removeFromParent()
+                            gameScene.popLastTutorialState()
+                            gameScene.tutorialLayerBg?.runAction(SKAction.fadeOutWithDuration(0.23))
+                            gameScene.nowNode = gameScene.childNodeWithName("//bounce")!
+                            gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
+                        }
+                    }
+                }
             }
+
         }
     }
     

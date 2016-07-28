@@ -118,6 +118,7 @@ class Level: SKScene {
         
         gameLevelNode.removeAllChildren()
         gameLevelNode.addChild(refLevels[n]!.copy() as! SKReferenceNode)
+        gameScene.objState = ObjState(levelNum: n)
         gameScene.nowLevelNum = n
         
         let skView = self.view as SKView!

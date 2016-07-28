@@ -25,7 +25,7 @@ class Home: SKScene {
         defaults = NSUserDefaults.standardUserDefaults()
         
         buttonPlay = childNodeWithName("buttonPlay") as! SKLabelNode
-        
+
         if gameScene.home == nil { gameScene.home = self }
         if gameScene.level == nil { gameScene.level = level }
 
