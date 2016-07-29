@@ -14,11 +14,13 @@ class TheObjects: SKSpriteNode {
         if let gameScene = self.scene as? GameScene {
             if gameScene.state == .Ready && gameScene.tutorialState == .Done {
                 if touches.count == 1 {
-                    gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
-                    gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
-                    if gameScene.nowNode != self.parent! {
-                        gameScene.nowNode = self.parent!
-                        gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
+                    if self.parent?.name != nil {
+                        gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                        gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                        if gameScene.nowNode != self.parent! {
+                            gameScene.nowNode = self.parent!
+                            gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
+                        }
                     }
                 }
             } else if gameScene.tutorialState == .TapBounce {
@@ -36,7 +38,6 @@ class TheObjects: SKSpriteNode {
                     }
                 }
             }
-
         }
     }
     

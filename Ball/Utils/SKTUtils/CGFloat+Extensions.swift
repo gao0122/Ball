@@ -102,3 +102,22 @@ public func shortestAngleBetween(angle1: CGFloat, angle2: CGFloat) -> CGFloat {
     }
     return angle
 }
+
+public extension Float {
+    /**
+     * Ensures that the float value stays between the given values, inclusive.
+     */
+    public func clamped(v1: Float, _ v2: Float) -> Float {
+        let min = v1 < v2 ? v1 : v2
+        let max = v1 > v2 ? v1 : v2
+        return self < min ? min : (self > max ? max : self)
+    }
+    
+    /**
+     * Ensures that the float value stays between the given values, inclusive.
+     */
+    public mutating func clamp(v1: Float, _ v2: Float) -> Float {
+        self = clamped(v1, v2)
+        return self
+    }
+}

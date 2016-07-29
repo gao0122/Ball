@@ -34,7 +34,7 @@ class Level: SKScene {
     var refLevels = [Int: SKReferenceNode!]()
 
     override func didMoveToView(view: SKView) {
-        
+
         defaults = NSUserDefaults.standardUserDefaults()
         chosen = false
 
@@ -105,6 +105,11 @@ class Level: SKScene {
             skView.showsPhysics = showPhy
             skView.ignoresSiblingOrder = true
             home.scaleMode = scaleMode
+            home.ballNode.removeAllActions()
+            home.ballNode.hidden = false
+            home.ballNode.alpha = 1
+            home.ballNode.position = home.startPos
+            home.ballNode.physicsBody?.dynamic = false
             skView.presentScene(home)
             camera?.position.y = screenHeight / 2
         }

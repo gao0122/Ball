@@ -176,7 +176,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 tutorialFunctionNext()
             case .TapBounce:
                 tutorialTapBounce()
-            default:
+            case .Done:
                 tutorialLayerBg?.runAction(SKAction.fadeOutWithDuration(0.23))
             }
         }
@@ -987,7 +987,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             if f {
                 functionNode.runAction(SKAction(named: "fadeIn")!)
-                print("\(functionNode.position)")
             }
             
         }
@@ -1492,7 +1491,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func popLastTutorialState() -> Void {
         if let ts = levelTutorial[nowLevelNum]?.popLast() {
-            tutorialState = ts
+            let level3 = childNodeWithName("//tutorialHelpEnd")
+            // if player taps too fast it will miss fade out actions
+            if level3 == nil || level3!.alpha == 0 {
+                tutorialState = ts
+            }
         } else {
             tutorialState = .Done
         }
@@ -1520,7 +1523,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         label.addChild(bg)
         label.alpha = 0
         label.runAction(SKAction.afterDelay(0.2, performAction: SKAction.fadeInWithDuration(0.2)))
-        
     }
     
     func tutorialIconLongPress() -> Void {
