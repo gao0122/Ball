@@ -10,18 +10,22 @@ import SpriteKit
 
 class Home: SKScene {
     
-    let screenHeight:CGFloat = 667
-    let screenWidth:CGFloat = 375
+    let screenHeight: CGFloat = 667
+    let screenWidth: CGFloat = 375
     let startPos = CGPoint(x: 187.5, y: 520)
-    let waitDelayAtBegin: NSTimeInterval = 4
+    let loadTime: NSTimeInterval = 0 // 4 seconds for loading the game
+    let todo = "change the time to 4"
     
     var defaults: NSUserDefaults!
     var level: Level! = Level(fileNamed: "Level") as Level!
     var gameScene: GameScene! = GameScene(fileNamed: "GameScene") as GameScene!
     
     var ballNode: SKSpriteNode!
+    var radialBall: SKSpriteNode!
+    var ropeNode: SKSpriteNode!
     var springField: SKFieldNode!
     
+    var waitDelayAtBegin: NSTimeInterval = 0.4
     var fromGameScenePassedAll = false
     var dropping = false
     var firstTimeStampBool = true
@@ -30,24 +34,29 @@ class Home: SKScene {
     override func didMoveToView(view: SKView) {
         
         defaults = NSUserDefaults.standardUserDefaults()
+        waitDelayAtBegin = ballNode == nil ? loadTime : 0.4
         
         ballNode = childNodeWithName("ball") as! SKSpriteNode
-        springField = childNodeWithName("//springField") as! SKFieldNode
+        radialBall = childNodeWithName("radialBall") as! SKSpriteNode
+        ropeNode = ballNode.childNodeWithName("rope") as! SKSpriteNode
+        springField = radialBall.childNodeWithName("springField") as! SKFieldNode
 
+        
         if gameScene.home == nil { gameScene.home = self }
         if gameScene.level == nil { gameScene.level = level }
-
         if fromGameScenePassedAll {
             //print("passed all!")
         }
-
+        
         dropping = false
         firstTimeStamp = 0
         firstTimeStampBool = true
         fromGameScenePassedAll = false
         springField.enabled = true
+        ropeNode.size.height = 40
         ballNode.alpha = 1
         ballNode.position = startPos
+        ballNode.physicsBody?.mass = 0.7
         ballNode.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
         ballNode.physicsBody?.dynamic = false
     }
@@ -65,6 +74,11 @@ class Home: SKScene {
     }
     
     override func update(currentTime: NSTimeInterval) {
+        let dy = startPos.y - ballNode.position.y
+        ropeNode.size.height = dy + 40
+        ropeNode.xScale = 1 - ropeNode.size.height / 2000
+        ropeNode.xScale.clamp(0.37, 1)
+        
         if firstTimeStampBool {
             firstTimeStamp = currentTime
             firstTimeStampBool = false

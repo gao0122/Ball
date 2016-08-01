@@ -105,6 +105,7 @@ class Level: SKScene {
             skView.showsPhysics = showPhy
             skView.ignoresSiblingOrder = true
             home.scaleMode = scaleMode
+            home.ropeNode.size.height = 40
             home.ballNode.removeAllActions()
             home.ballNode.hidden = false
             home.ballNode.alpha = 1

@@ -11,6 +11,8 @@ import SpriteKit
 class ShortStick: TheObjects {
     
     let objName = "Short stick"
+    let right = "right"
+    let left = "left"
     
     var direction = "right"
     
