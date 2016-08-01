@@ -14,7 +14,7 @@ enum GameState {
 
 enum TutorialState {
     case Done,
-    Go, IntroStart, IntroGoal, Icon, IntroIcon, TouchMoving, TouchMovingNext,
+    Go, IntroStart, IntroGoal, Icon, IntroIcon, TouchMoving,
     IconLongPress, BeforeIconLongPress, IconLongPressNext, Function, FNext,
     TapBounce
 }
@@ -26,8 +26,8 @@ struct ObjState {
     
     init(levelNum: Int) {
         self.levelNum = levelNum
-        objPos = [String: CGPoint]()
-        objClass = [String: SKNode]()
+        self.objPos = [String: CGPoint]()
+        self.objClass = [String: SKNode]()
     }
 }
 
@@ -52,8 +52,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var ballNode: Ball!
     var levelNode: SKNode!
-    var startNode: SKSpriteNode!
-    var endNode: SKSpriteNode!
+    var startNode: SKSpriteNode! {
+        didSet {
+            cropRoundCorner(startNode)
+        }
+    }
+    var endNode: SKSpriteNode! {
+        didSet {
+            cropRoundCorner(endNode)
+        }
+    }
     var nowNode: SKNode! {
         didSet {
             lastTouchLocation = nowNode.position
@@ -114,9 +122,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     var nowLevelNum: Int! {
         didSet {
-            if nowLevelNum > 0 {
-                objState.levelNum = nowLevelNum
-            }
+            if nowLevelNum > 0 { objState.levelNum = nowLevelNum }
         }
     }
     var nowNodeIndex = 0
@@ -141,7 +147,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     var levelTutorial: [Int: [TutorialState]]!
     let levelTutorialStates: [Int: [TutorialState]] = [
-        1: [.Done, .Go, .TouchMovingNext, .TouchMoving, .IntroIcon, .Icon, .IntroGoal, .IntroStart],
+        1: [.Done, .Go, .TouchMoving, .IntroIcon, .Icon, .IntroGoal, .IntroStart],
         2: [.Done, .FNext, .Function, .Icon, .IconLongPressNext, .IconLongPress, .BeforeIconLongPress, .Icon],
         3: [.Done, .FNext, .Function, .TapBounce],
     ]
@@ -162,8 +168,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 introIconActions()
             case .TouchMoving:
                 tutorialTouchMoving(CGPoint(x: screenWidth / 2, y: 250))
-            case .TouchMovingNext:
-                tutorialTouchMovingNext()
             case .BeforeIconLongPress:
                 tutorialBeforeIconLongPress()
             case .IconLongPress:
@@ -248,11 +252,43 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
         }
-        
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         /* Called when a touch begins */
+        if tutorialState == .TouchMoving {
+            if touches.count == 1 {
+                let touch = touches.first!
+                lastTouchLocation = touch.locationInNode(self)
+                let node = nodeAtPoint(lastTouchLocation)
+                let label = childNodeWithName("//tutorialMovingLabel") as! SKLabelNode
+                if node.name == "touchIn" {
+                    label.text = "Drop the stick here"
+                    let arrow = SKSpriteNode(texture: SKTexture(imageNamed: "arrowIcon"))
+                    label.addChild(arrow)
+                    arrow.name = "tutorialArrow"
+                    arrow.position -= CGPoint(x: 98, y: 41)
+                    arrow.zRotation = angleToRadian(180)
+                    arrow.zPosition = 50
+                    arrow.alpha = 0
+                    arrow.runAction(SKAction.fadeInWithDuration(0.23))
+
+                    let drop = SKShapeNode.init(rect: CGRect(origin: CGPoint(x: -40, y: -60), size: CGSize(width: 80, height: 120)), cornerRadius: 4.8)
+                    drop.name = "tutorialDrop"
+                    drop.fillColor = UIColor.blackColor()
+                    drop.strokeColor = UIColor.blackColor()
+                    drop.alpha = 0
+                    drop.zPosition = -52
+                    drop.position = CGPoint(x: -100, y: -124)
+                    drop.runAction(SKAction.fadeAlphaTo(0.32, duration: 0.23))
+                    label.addChild(drop)
+                } else {
+                    label.childNodeWithName("tutorialArrow")?.removeFromParent()
+                    label.childNodeWithName("tutorialDrop")?.removeFromParent()
+                }
+            }
+            return
+        }
         if tutorialState != .Done && tutorialState != .Function {
             let p =
                 tutorialState != .Icon &&
@@ -262,9 +298,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if p {
                 if tutorialState == .FNext {
                     levelNode.childNodeWithName("tutorialHelpEnd")?.runAction(SKAction.fadeOutWithDuration(0.23))
+                    levelNode.childNodeWithName("tutorialHelpEnd")?.removeFromParent()
                 }
                 popLastTutorialState()
             }
+            return
+        } else if let help = childNodeWithName("//tutorialHelpEnd") {
+            // if player taps too fast it will miss fade out actions
+            help.runAction(SKAction.fadeOutWithDuration(0.23))
+            help.removeFromParent()
             return
         }
         
@@ -322,8 +364,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        
         if tutorialState != .Done && tutorialState != .Function {
+            if tutorialState == .TouchMoving {
+                if touches.count == 1 {
+                    let touch = touches.first!
+                    let pos = touch.locationInNode(self)
+                    let label = childNodeWithName("//tutorialMovingLabel") as! SKLabelNode
+                    if label.text == "Drop the stick here" {
+                        updateObjMove(pos)
+                        childNodeWithName("//tutorialHelp")?.position = pos
+                    }
+                }
+            }
             return
         }
 
@@ -372,6 +424,38 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
         if tutorialState != .Done && tutorialState != .Function {
+            if tutorialState == .TouchMoving {
+                if touches.count == 1 {
+                    let touch = touches.first!
+                    let pos = touch.locationInNode(self)
+                    let node = nodeAtPoint(pos)
+                    if node.name == "touchIn" {
+                        lastTouchNodeLocation = nowNode.position
+                        if let drop = childNodeWithName("//tutorialDrop") as? SKShapeNode {
+                            let label = childNodeWithName("//tutorialMovingLabel") as! SKLabelNode
+                            let w = drop.frame.width
+                            let h = drop.frame.height
+                            let p = drop.position + label.position
+                            let np = nowNode.position
+                            print("\(p) \(np)")
+                            if abs(np.x - p.x) < w / 2 - 37 && abs(np.y - p.y) < h / 2 - 24 {
+                                popLastTutorialState()
+                                drop.runAction(SKAction.fadeOutWithDuration(0.21))
+                            } else {
+                                let label = childNodeWithName("//tutorialMovingLabel") as! SKLabelNode
+                                label.text = "Hold to move current object"
+                                label.childNodeWithName("tutorialArrow")?.removeFromParent()
+                                label.childNodeWithName("tutorialDrop")?.removeFromParent()
+                            }
+                        } else {
+                            let label = childNodeWithName("//tutorialMovingLabel") as! SKLabelNode
+                            label.text = "Hold to move current object"
+                            label.childNodeWithName("tutorialArrow")?.removeFromParent()
+                            label.childNodeWithName("tutorialDrop")?.removeFromParent()
+                        }
+                    }
+                }
+            }
             return
         }
 
@@ -700,6 +784,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.view?.multipleTouchEnabled = false
     }
     
+    func cropRoundCorner(node: SKSpriteNode) -> Void {
+        let w: CGFloat = node.size.width
+        let h: CGFloat = node.size.height
+        let cropNode = SKCropNode()
+        let mask = SKShapeNode()
+        mask.path = CGPathCreateWithRoundedRect(CGRectMake(-w / 2, -h / 2, w, h), 9, 9, nil)
+        mask.fillColor = node.color
+        mask.strokeColor = node.color
+        
+        cropNode.maskNode = mask
+        let parent = node.parent!
+        parent.addChild(cropNode)
+        cropNode.position = node.position
+        node.removeFromParent()
+        cropNode.addChild(node)
+    }
+    
     func initGame() -> Void {
         let initial = "this is initGame"
         
@@ -726,6 +827,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         touched = false
         multiTouching = false
         ballNode.hidden = false
+        ballNode.physicsBody?.angularVelocity = 0
         ballNode.physicsBody?.dynamic = true
         ballNode.physicsBody?.affectedByGravity = false
         ballNode.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
@@ -787,6 +889,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             tutorialLayerBg!.zPosition = 0
             if tutorialState != .Done {
                 tutorialLayerBg!.runAction(SKAction.afterDelay(0.4, performAction: SKAction.fadeInWithDuration(0.48)))
+            }
+            
+            if let skip = childNodeWithName("//skipLabelArea") as? MSButtonNode {
+                skip.selectedHandler = {
+                    skip.parent!.runAction(SKAction.fadeOutWithDuration(0.24))
+                    self.tutorialLayer?.hidden = true
+                    self.tutorialLayer?.removeFromParent()
+                    self.levelTutorial[self.nowLevelNum] = []
+                    self.tutorialState = .Done
+                }
             }
         }
     }
@@ -1002,7 +1114,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func updateObjMove(location: CGPoint) -> Void {
         var pos = location + lastTouchNodeLocation - lastTouchLocation
         if nowNode == ballNode {
-            // ball hit wall case
+            // ball hit wall cases
             if pos.x <= ballRadius || pos.x >= screenWidth - ballRadius ||
                 pos.y >= screenHeidht - ballRadius || pos.y <= menuHeight + ballRadius {
                 
@@ -1257,13 +1369,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func tutorialTouchMoving(pos: CGPoint) -> Void {
         if let path = NSBundle.mainBundle().pathForResource("TouchIcon", ofType: "sks") {
             
-            let label = SKLabelNode(text: "Better way to move")
+            let label = SKLabelNode(text: "Hold to move current object")
             levelNode.addChild(label)
             label.name = "tutorialMovingLabel"
             label.position = CGPoint(x: 187.5, y: 484)
             label.zPosition = 50
-            label.fontSize = 27
-            let bg = SKShapeNode.init(rect: CGRect(origin: CGPoint(x: -142, y: -14), size: CGSize(width: 284, height: 48)), cornerRadius: 8.4)
+            label.fontSize = 23
+            let bg = SKShapeNode.init(rect: CGRect(origin: CGPoint(x: -151, y: -14), size: CGSize(width: 302, height: 48)), cornerRadius: 8.4)
             bg.fillColor = UIColor.blackColor()
             bg.strokeColor = UIColor.blackColor()
             bg.alpha = 0.32
@@ -1275,92 +1387,38 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             touchIcon.name = "tutorialHelp"
             tutorialLayer!.addChild(touchIcon)
             
-            let movingDistance = 80
-            
-            let touchFadeIn = SKAction.fadeInWithDuration(0.3)
-            let touchMove = SKAction.moveBy(CGVector(dx: -movingDistance, dy: 0), duration: 1)
-            let touchFadeOut = SKAction.fadeOutWithDuration(0.5)
-            let touchMoveBack = SKAction.moveBy(CGVector(dx: movingDistance, dy: 0), duration: 0.6)
-            let touchMF = SKAction.sequence([touchMove, touchFadeOut, touchMoveBack, touchFadeIn])
-            touchMF.timingMode = SKActionTimingMode.EaseInEaseOut
-            
+            let handIcon = SKSpriteNode(imageNamed: "oneFinger")
+            touchIcon.addChild(handIcon)
+            handIcon.position = CGPoint(x: 8, y: -56)
+
             let touchIn = touchIcon.childNodeWithName("//touchIn") as! SKSpriteNode
             let touchFadeTo4 = SKAction.fadeAlphaTo(0.4, duration: 0.7)
             let touchFadeTo8 = SKAction.fadeAlphaTo(0.8, duration:0.7)
             let touchFadeTo2 = SKAction.fadeAlphaTo(0.2, duration: 0.7)
             let touchFadeTo6 = SKAction.fadeAlphaTo(0.6, duration: 0.7)
+            let touchFadeOut = SKAction.fadeOutWithDuration(0.5)
+            let touchFadeIn = SKAction.fadeInWithDuration(0.3)
             
             let touchDelay = SKAction.waitForDuration(1.7)
             let touchFade = SKAction.sequence([touchFadeTo4, touchFadeTo8, touchFadeTo2, touchFadeTo6])
             let touchAction = SKAction.sequence([touchFade, touchFadeOut, touchFade, touchFadeIn, touchDelay])
-            touchAction.timingMode = SKActionTimingMode.EaseInEaseOut
-            
-            let handIcon = SKSpriteNode(imageNamed: "oneFinger")
-            touchIcon.addChild(handIcon)
-            handIcon.position = CGPoint(x: 8, y: -56)
             touchIn.runAction(SKAction.repeatActionForever(touchAction))
-            touchIcon.runAction(SKAction.repeatActionForever(touchMF))
-            if nowNode != ballNode {
-                nowNode.runAction(SKAction.repeatActionForever(touchMF))
-            }
-        }
-    }
-    
-    func tutorialTouchMovingNext() -> Void {
-        nowNodeFadeIn(screenWidth / 2)
-        if let path = NSBundle.mainBundle().pathForResource("TouchIcon", ofType: "sks") {
-            let label1 = levelNode.childNodeWithName("tutorialMovingLabel") as! SKLabelNode
-            label1.runAction(SKAction.fadeOutWithDuration(0.18))
-            
-            let label = SKLabelNode(text: "Another way: hold on the object and drag")
-            levelNode.addChild(label)
-            label.name = "tutorialMovingLabel2"
-            label.position = CGPoint(x: 187.5, y: 484)
-            label.zPosition = 50
-            label.fontSize = 17
-            let bg = SKShapeNode.init(rect: CGRect(origin: CGPoint(x: -156, y: -17), size: CGSize(width: 312, height: 48)), cornerRadius: 8.4)
-            bg.fillColor = UIColor.blackColor()
-            bg.strokeColor = UIColor.blackColor()
-            bg.alpha = 0.32
-            label.addChild(bg)
-            label.alpha = 0
-            label.runAction(SKAction.afterDelay(0.2, performAction: SKAction.fadeInWithDuration(0.2)))
-            
-            let touchIcon = SKReferenceNode(URL: NSURL(fileURLWithPath: path))
-            touchIcon.name = "tutorialHelp"
-            touchIcon.position = nowNode.position
-            touchIcon.zPosition = 28
-            self.tutorialLayer!.addChild(touchIcon)
-            
-            let movingDistance = -80
-            
-            let touchFadeIn = SKAction.fadeInWithDuration(0.3)
-            let touchMove = SKAction.moveBy(CGVector(dx: movingDistance, dy: 0), duration: 1)
-            let touchFadeOut = SKAction.fadeOutWithDuration(0.5)
-            let touchMoveBack = SKAction.moveBy(CGVector(dx: -movingDistance, dy: 0), duration: 0.6)
-            let touchMF = SKAction.sequence([touchMove, touchFadeOut, touchMoveBack, touchFadeIn])
-            touchMF.timingMode = SKActionTimingMode.EaseInEaseOut
-            
-            touchIcon.childNodeWithName("//touchOut")?.hidden = true
-            let touchIn = touchIcon.childNodeWithName("//touchIn") as! SKSpriteNode
-            let touchFadeTo4 = SKAction.fadeAlphaTo(0.4, duration: 1)
-            let touchFadeTo8 = SKAction.fadeAlphaTo(0.8, duration: 1)
-            let touchFadeTo2 = SKAction.fadeAlphaTo(0.2, duration: 1)
-            let touchFadeTo6 = SKAction.fadeAlphaTo(0.6, duration: 1)
-            
-            let touchDelay = SKAction.waitForDuration(1.8)
-            let touchFade = SKAction.sequence([touchFadeTo4, touchFadeTo8, touchFadeTo2, touchFadeTo6])
-            let touchAction = SKAction.sequence([touchFade, touchFadeOut, touchFade, touchFadeIn, touchDelay])
-            touchAction.timingMode = SKActionTimingMode.EaseInEaseOut
-            
-            let handIcon = SKSpriteNode(imageNamed: "oneFinger")
-            touchIcon.addChild(handIcon)
-            handIcon.position = CGPoint(x: 8, y: -52)
-            touchIn.runAction(SKAction.repeatActionForever(touchAction))
-            touchIcon.runAction(SKAction.repeatActionForever(touchMF))
-            if nowNode != ballNode {
-                nowNode.runAction(SKAction.repeatActionForever(touchMF))
-            }
+
+//            let movingDistance = 80
+//
+//            let touchMove = SKAction.moveBy(CGVector(dx: -movingDistance, dy: 0), duration: 1)
+//            let touchMoveBack = SKAction.moveBy(CGVector(dx: movingDistance, dy: 0), duration: 0.6)
+//            let touchMF = SKAction.sequence([touchMove, touchFadeOut, touchMoveBack, touchFadeIn])
+//            touchMF.timingMode = SKActionTimingMode.EaseInEaseOut
+//
+//            touchAction.timingMode = SKActionTimingMode.EaseInEaseOut
+//
+//            let repeatMF = SKAction.repeatActionForever(touchMF)
+//
+//            touchIcon.runAction(repeatMF)
+//            if nowNode != ballNode {
+//                nowNode.runAction(repeatMF)
+//            }
         }
     }
     
@@ -1423,7 +1481,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func tutorialGo() -> Void {
         if nowLevelNum == 1 {
-            nowNodeFadeIn(screenWidth / 2 - 80)
             childNodeWithName("//tutorialMovingLabel")?.removeFromParent()
             childNodeWithName("//tutorialMovingLabel2")?.removeFromParent()
         }
@@ -1491,16 +1548,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func popLastTutorialState() -> Void {
         if let ts = levelTutorial[nowLevelNum]?.popLast() {
-            let level3 = childNodeWithName("//tutorialHelpEnd")
-            // if player taps too fast it will miss fade out actions
-            if level3 == nil || level3!.alpha == 0 {
-                tutorialState = ts
-            }
+            tutorialState = ts
         } else {
             tutorialState = .Done
         }
     }
-    
+
+    // no use
     func nowNodeFadeIn(x: CGFloat) -> Void {
         if nowNode != ballNode {
             nowNode.removeAllActions()

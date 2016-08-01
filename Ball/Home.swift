@@ -53,11 +53,13 @@ class Home: SKScene {
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        for touch in touches {
-            let node = nodeAtPoint(touch.locationInNode(self))
-            springField.enabled = !springField.enabled
-            if node == ballNode {
-                
+        if dropping {
+            for touch in touches {
+                let node = nodeAtPoint(touch.locationInNode(self))
+                springField.enabled = !springField.enabled
+                if node == ballNode {
+                    
+                }
             }
         }
     }

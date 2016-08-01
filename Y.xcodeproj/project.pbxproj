@@ -517,7 +517,7 @@
 				INFOPLIST_FILE = Ball/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yuchao.Y-Ball";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yuchao.Y-Drop-the-Ball";
 				PRODUCT_NAME = Y;
 				"Texture Atlas Maximum Size" = 4096x4096;
 			};
@@ -532,7 +532,7 @@
 				INFOPLIST_FILE = Ball/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yuchao.Y-Ball";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yuchao.Y-Drop-the-Ball";
 				PRODUCT_NAME = Y;
 				"Texture Atlas Maximum Size" = 4096x4096;
 			};
