@@ -54,11 +54,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var levelNode: SKNode!
     var startNode: SKSpriteNode! {
         didSet {
+            startNode.color = SKColor(red: 28 / 256, green: 242 / 256, blue: 118 / 256, alpha: 1)
             cropRoundCorner(startNode)
         }
     }
     var endNode: SKSpriteNode! {
         didSet {
+            endNode.color = SKColor(red: 255 / 256, green: 48 / 256, blue: 44 / 256, alpha: 1)
             cropRoundCorner(endNode)
         }
     }
@@ -266,7 +268,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     rotationNode.runAction(SKAction(named: "fadeOut")!)
                     functionNode.runAction(SKAction(named: "fadeOut")!)
                     label.text = "Drop the stick there"
-                    let arrow = SKSpriteNode(texture: SKTexture(imageNamed: "arrowIcon"))
+                    let arrow = SKSpriteNode(texture: SKTextureAtlas(named: "assets").textureNamed("arrowIcon"))
                     label.addChild(arrow)
                     arrow.name = "tutorialArrow"
                     arrow.position -= CGPoint(x: 98, y: 41)
@@ -671,14 +673,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func isBallInArea(node: SKSpriteNode, hard: Bool) -> Bool {
-        let pos = ballNode.position
-        
-        let xL = node.position.x - node.size.width / 2 + (hard ? ballRadius : -ballRadius)
-        let xR = node.position.x + node.size.width / 2 + (hard ? -ballRadius : ballRadius)
-        let yU = node.position.y + node.size.height / 2 + (hard ? -ballRadius : ballRadius)
-        let yD = node.position.y - node.size.height / 2 + (hard ? ballRadius : -ballRadius)
-        
-        return xL < pos.x && xR > pos.x && yU > pos.y && yD < pos.y
+        if let np = node.parent {
+            let pos = ballNode.position
+            let xL = np.position.x - node.size.width / 2 + (hard ? ballRadius : -ballRadius)
+            let xR = np.position.x + node.size.width / 2 + (hard ? -ballRadius : ballRadius)
+            let yU = np.position.y + node.size.height / 2 + (hard ? -ballRadius : ballRadius)
+            let yD = np.position.y - node.size.height / 2 + (hard ? ballRadius : -ballRadius)
+            return xL < pos.x && xR > pos.x && yU > pos.y && yD < pos.y
+        }
+        return false
     }
     
     func restart(levelN: Int) -> Void {
@@ -797,17 +800,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let w: CGFloat = node.size.width
         let h: CGFloat = node.size.height
         let cropNode = SKCropNode()
-        let mask = SKShapeNode()
-        mask.path = CGPathCreateWithRoundedRect(CGRectMake(-w / 2, -h / 2, w, h), 9, 9, nil)
+        let rect = CGRect(x: -w / 2, y: -h / 2, width: w, height: h)
+        let mask = SKShapeNode(rect: rect, cornerRadius: 9)
+        mask.strokeColor = SKColor.clearColor()
         mask.fillColor = node.color
-        mask.strokeColor = node.color
-        
+
         cropNode.maskNode = mask
         let parent = node.parent!
         parent.addChild(cropNode)
         cropNode.position = node.position
         node.removeFromParent()
         cropNode.addChild(node)
+        node.position = CGPoint(x: -w, y: -h)
+        mask.alpha = 0.78
     }
     
     func initGame() -> Void {
@@ -862,7 +867,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         tutorialLayerBg = tutorialLayer?.childNodeWithName("tutorialBg") as? SKSpriteNode
         countObjNodeIndex()
 
-        nowNode.position = startNode.position // init position
+        nowNode.position = startNode.parent!.position // init position
         lastTouchLocation = ballNode.position
         lastTouchNodeLocation = ballNode.position
                 
@@ -1409,7 +1414,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             touchIcon.name = "tutorialHelp"
             tutorialLayer!.addChild(touchIcon)
             
-            let handIcon = SKSpriteNode(imageNamed: "oneFinger")
+            let handIcon = SKSpriteNode(texture: SKTextureAtlas(named: "assets").textureNamed("oneFinger"))
             touchIcon.addChild(handIcon)
             handIcon.position = CGPoint(x: 8, y: -56)
 
@@ -1529,7 +1534,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         label.zPosition = 50
         label.fontSize = 17
         
-        let arrow = SKSpriteNode(texture: SKTexture(imageNamed: "arrowIcon"))
+        let arrow = SKSpriteNode(texture: SKTextureAtlas(named: "assets").textureNamed("arrowIcon"))
         label.addChild(arrow)
         arrow.position -= CGPoint(x: 0, y: 22)
         arrow.zRotation = angleToRadian(180)
@@ -1595,7 +1600,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         label.zPosition = 50
         label.fontSize = 17
         
-        let arrow = SKSpriteNode(texture: SKTexture(imageNamed: "arrowIcon"))
+        let arrow = SKSpriteNode(texture: SKTextureAtlas(named: "assets").textureNamed("arrowIcon"))
         label.addChild(arrow)
         arrow.position -= CGPoint(x: 0, y: 25)
         arrow.zRotation = angleToRadian(180)
@@ -1659,7 +1664,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         label2.fontSize = 20
         label.addChild(label2)
         
-        let arrow = SKSpriteNode(texture: SKTexture(imageNamed: "arrowIcon"))
+        let arrow = SKSpriteNode(texture: SKTextureAtlas(named: "assets").textureNamed("arrowIcon"))
         label.addChild(arrow)
         arrow.position -= CGPoint(x: 0, y: -60)
         arrow.zPosition = 50
@@ -1683,7 +1688,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         bg.alpha = 0.32
         label.addChild(bg)
         
-        let arrow = SKSpriteNode(texture: SKTexture(imageNamed: "arrowIcon"))
+        let arrow = SKSpriteNode(texture: SKTextureAtlas(named: "assets").textureNamed("arrowIcon"))
         label.addChild(arrow)
         arrow.position -= CGPoint(x: 0, y: 39)
         arrow.zRotation = angleToRadian(180)
@@ -1719,7 +1724,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             label.zPosition = 50
             label.fontSize = 21
 
-            let arrow = SKSpriteNode(texture: SKTexture(imageNamed: "arrowIcon"))
+            let arrow = SKSpriteNode(texture: SKTextureAtlas(named: "assets").textureNamed("arrowIcon"))
             label.addChild(arrow)
             arrow.position -= CGPoint(x: 0, y: -41)
             arrow.zPosition = 50
