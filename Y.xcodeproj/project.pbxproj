@@ -55,7 +55,7 @@
 		00CEF9411D3F18C500C7B211 /* Level7.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00CEF9401D3F18C500C7B211 /* Level7.sks */; };
 		00CEF9431D3F1D3500C7B211 /* Level8.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00CEF9421D3F1D3500C7B211 /* Level8.sks */; };
 		00D580FF1D32FADB00702DBE /* AnimationActions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00D580FE1D32FADB00702DBE /* AnimationActions.sks */; };
-		00EDFA751D3B3FF9009B3C13 /* Setting.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00EDFA741D3B3FF9009B3C13 /* Setting.sks */; };
+		00EDFA751D3B3FF9009B3C13 /* Settings.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00EDFA741D3B3FF9009B3C13 /* Settings.sks */; };
 		00F806371D429B62009AC57B /* Level11.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00F806351D429B62009AC57B /* Level11.sks */; };
 		00F806381D429B62009AC57B /* Level12.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00F806361D429B62009AC57B /* Level12.sks */; };
 		00F8063B1D429CD8009AC57B /* Level4.sks in Resources */ = {isa = PBXBuildFile; fileRef = 00F806391D429CD8009AC57B /* Level4.sks */; };
@@ -114,7 +114,7 @@
 		00CEF9401D3F18C500C7B211 /* Level7.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level7.sks; sourceTree = "<group>"; };
 		00CEF9421D3F1D3500C7B211 /* Level8.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level8.sks; sourceTree = "<group>"; };
 		00D580FE1D32FADB00702DBE /* AnimationActions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = AnimationActions.sks; sourceTree = "<group>"; };
-		00EDFA741D3B3FF9009B3C13 /* Setting.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Setting.sks; sourceTree = "<group>"; };
+		00EDFA741D3B3FF9009B3C13 /* Settings.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Settings.sks; sourceTree = "<group>"; };
 		00F806351D429B62009AC57B /* Level11.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level11.sks; sourceTree = "<group>"; };
 		00F806361D429B62009AC57B /* Level12.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level12.sks; sourceTree = "<group>"; };
 		00F806391D429CD8009AC57B /* Level4.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level4.sks; sourceTree = "<group>"; };
@@ -170,7 +170,7 @@
 			isa = PBXGroup;
 			children = (
 				00D580FE1D32FADB00702DBE /* AnimationActions.sks */,
-				00EDFA741D3B3FF9009B3C13 /* Setting.sks */,
+				00EDFA741D3B3FF9009B3C13 /* Settings.sks */,
 				009E44921D3030A600F8B596 /* Home.sks */,
 				009E448C1D3030A600F8B596 /* Level.sks */,
 				009E44891D3030A600F8B596 /* GameScene.sks */,
@@ -350,7 +350,7 @@
 				004974571D3DDC8800B9F3B1 /* Level5.sks in Resources */,
 				009E449A1D3030A600F8B596 /* Level.sks in Resources */,
 				009E44951D3030A600F8B596 /* Bounce.sks in Resources */,
-				00EDFA751D3B3FF9009B3C13 /* Setting.sks in Resources */,
+				00EDFA751D3B3FF9009B3C13 /* Settings.sks in Resources */,
 				00ADCDC41D31F85F0070632B /* Level3.sks in Resources */,
 				00F8063B1D429CD8009AC57B /* Level4.sks in Resources */,
 				00CEF9431D3F1D3500C7B211 /* Level8.sks in Resources */,

@@ -7,10 +7,9 @@
 //
 
 import SpriteKit
+import GameKit
 
-let levelNum = 15
-
-class Level: SKScene {
+class Level: SKScene, GKGameCenterControllerDelegate {
     
     let screenHeight: CGFloat = 667
     
@@ -18,7 +17,6 @@ class Level: SKScene {
     var home: Home!
     
     var chosen = false
-    var passedLevelNum = 0
     var totalTime: Double = 0
     
     var gameLevelNode: SKNode!
@@ -27,6 +25,8 @@ class Level: SKScene {
     var bestTimeLabel: SKLabelNode!
     var buttonHome: MSButtonNode!
     var buttonHelp: MSButtonNode!
+    var buttonSettings: MSButtonNode!
+    var buttonGC: MSButtonNode!
     
     var defaults: NSUserDefaults!
     
@@ -37,12 +37,12 @@ class Level: SKScene {
 
         defaults = NSUserDefaults.standardUserDefaults()
         chosen = false
+        authPlayer()
 
         /* Set the scale mode to scale to fit the window */
         gameScene.scaleMode = scaleMode
         if gameScene.level == nil { gameScene.level = self }
         gameLevelNode = gameScene.childNodeWithName("levelNode")!
-        
         homeNode = childNodeWithName("homeNode")!
         if refHome == nil {
             refHome = SKReferenceNode(URL: NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource("Home", ofType: "sks")!))
@@ -50,12 +50,21 @@ class Level: SKScene {
         }
         
         menuNode = childNodeWithName("menu")!
-        bestTimeLabel = menuNode.childNodeWithName("bestTimeLabel") as! SKLabelNode
+        bestTimeLabel = childNodeWithName("bestTimeLabel") as! SKLabelNode
         buttonHome = menuNode.childNodeWithName("buttonHome") as! MSButtonNode
         buttonHelp = menuNode.childNodeWithName("buttonHelp") as! MSButtonNode
+        buttonSettings = menuNode.childNodeWithName("settings") as! MSButtonNode
+        buttonGC = menuNode.childNodeWithName("gameCenter") as! MSButtonNode
 
-        passedLevelNum = defaults.integerForKey("passedLevelNum") ?? 0
+        gameScene.passedLevelNum = 0
         totalTime = defaults.doubleForKey("totalTime") ?? 0
+        bestTimeLabel.alpha = 0
+        if totalTime == 1 {
+            bestTimeLabel.text = "Spent " + String(format: "%.3f", totalTime) + " second"
+        } else {
+            bestTimeLabel.text = "Spent " + String(format: "%.3f", totalTime) + " seconds"
+        }
+        bestTimeLabel.runAction(SKAction.afterDelay(1, performAction: SKAction.fadeInWithDuration(0.4)))
         
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FOR TEST ONLY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if !defaults.boolForKey("unlockedAll") { defaults.setBool(true, forKey: "unlockedAll") }
@@ -67,7 +76,8 @@ class Level: SKScene {
             } else if defaults.boolForKey("unlockedAll") {
                 // unlocked - UI
             } else {
-                if defaults.boolForKey("pass\(n)") {
+                if defaults.doubleForKey("best\(n)") > 0 {
+                    gameScene.passedLevelNum += 1
                     // pass UI
                 } else {
                     // locked UI
@@ -80,6 +90,11 @@ class Level: SKScene {
             self.camera?.runAction(cameraMove)
         }
         buttonHelp.selectedHandler = showHelp
+        buttonSettings.selectedHandler = {
+            self.getAllScore()
+        }
+        buttonGC.selectedHandler = showLeaderBoard
+        
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -88,7 +103,7 @@ class Level: SKScene {
             let node = nodeAtPoint(touch.locationInNode(self))
             for n in 1...levelNum {
                 if node.name == "level\(n)" || node.name == "level\(n)Area" {
-                    if n == 1 || defaults.boolForKey("pass\(n)") || defaults.boolForKey("pass\(n - 1)") || defaults.boolForKey("unlockedAll") {
+                    if n == 1 || defaults.doubleForKey("best\(n)") > 0 || defaults.doubleForKey("best\(n - 1)") > 0  || defaults.boolForKey("unlockedAll") {
                         
                         moveToLevelN(n, name: node.name!)
                         break
@@ -144,5 +159,50 @@ class Level: SKScene {
             refLevels[n]!.name = "level\(n)"
         }
     }
+    
+    func gameCenterViewControllerDidFinish(gameCenterViewController: GKGameCenterViewController) {
+        gameCenterViewController.dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func authPlayer() -> Void {
+        let localPlayer = GKLocalPlayer.localPlayer()
+        
+        localPlayer.authenticateHandler = {
+            (view, error) in
+            
+            if view != nil {
+                self.view!.window?.rootViewController?.presentViewController(view!, animated: true, completion: nil)
+            }
+        }
+    }
 
+    func showLeaderBoard() -> Void {
+        let viewController = self.view!.window?.rootViewController
+        let gcvc = GKGameCenterViewController()
+        gcvc.viewState = GKGameCenterViewControllerState.Leaderboards
+        gcvc.leaderboardIdentifier = gcWorld
+
+        gcvc.gameCenterDelegate = self
+        viewController?.presentViewController(gcvc, animated: true, completion: nil)
+    }
+    
+    func getAllScore() -> [Double] {
+        var array = [Double]()
+        
+        if GKLocalPlayer.localPlayer().authenticated {
+            GKLeaderboard.loadLeaderboardsWithCompletionHandler {
+                objects, error in
+                if let e = error {
+                    print(e)
+                } else if let leaderboards = objects {
+                    for leaderboard in leaderboards {
+                        leaderboard.playerScope.rawValue
+                    }
+                }
+            }
+            
+        }
+        return array
+    }
+    
 }

@@ -7,14 +7,17 @@
 //
 
 import SpriteKit
+import GameKit
 
-class Home: SKScene {
+let levelNum = 15
+let gcWorld = "worldBest0731"
+
+class Home: SKScene, GKGameCenterControllerDelegate {
     
     let screenHeight: CGFloat = 667
     let screenWidth: CGFloat = 375
     let startPos = CGPoint(x: 187.5, y: 520)
     let loadTime: NSTimeInterval = 0 // 4 seconds for loading the game
-    let todo = "change the time to 4"
     
     var defaults: NSUserDefaults!
     var level: Level! = Level(fileNamed: "Level") as Level!
@@ -29,7 +32,7 @@ class Home: SKScene {
     var fromGameScenePassedAll = false
     var dropping = false
     var firstTimeStampBool = true
-    var firstTimeStamp: NSTimeInterval = 0
+    var firstTimeStamp: NSTimeInterval = 0 // to be 4 but not 0
     
     override func didMoveToView(view: SKView) {
         
@@ -122,6 +125,10 @@ class Home: SKScene {
                 springField.strength.clamp(5.6, 6.6)
             }
         }
+    }
+    
+    func gameCenterViewControllerDidFinish(gameCenterViewController: GKGameCenterViewController) {
+        gameCenterViewController.dismissViewControllerAnimated(true, completion: nil)
     }
     
 }
