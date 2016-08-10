@@ -89,7 +89,7 @@ class MSButtonNode: SKSpriteNode {
                     (scene.tutorialState == .Done || scene.tutorialState == .IconLongPress) {
                     // iconLongPressAction
                     scene.nowNode.runAction(SKAction(named: "moveToCenter")!)
-                    scene.lastTouchNodeLocation = CGPoint(x: scene.screenWidth / 2, y: 384)
+                    scene.lastTouchNodeLocation = CGPoint(x: screenWidth / 2, y: 384)
                     let scale = SKAction.afterDelay(0.4, performAction: SKAction(named: "scaleToFocus")!)
                     scale.timingMode = SKActionTimingMode.EaseInEaseOut
                     scene.nowNode.runAction(scale)

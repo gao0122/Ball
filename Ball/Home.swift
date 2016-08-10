@@ -10,13 +10,13 @@ import SpriteKit
 import GameKit
 
 let levelNum = 15
-let gcWorld = "worldBest0731"
+let screenHeight: CGFloat = 667
+let screenWidth: CGFloat = 375
+let gcWorld = "worldBest"
 
 class Home: SKScene, GKGameCenterControllerDelegate {
     
-    let screenHeight: CGFloat = 667
-    let screenWidth: CGFloat = 375
-    let startPos = CGPoint(x: 187.5, y: 520)
+    let startPos = CGPoint(x: 217.5, y: 520)
     let loadTime: NSTimeInterval = 0 // 4 seconds for loading the game
     
     var defaults: NSUserDefaults!
@@ -27,10 +27,11 @@ class Home: SKScene, GKGameCenterControllerDelegate {
     var radialBall: SKSpriteNode!
     var ropeNode: SKSpriteNode!
     var springField: SKFieldNode!
-    
+    var playLabel: SKLabelNode!
+
     var waitDelayAtBegin: NSTimeInterval = 0.4
-    var fromGameScenePassedAll = false
     var dropping = false
+    var musicSet = false
     var firstTimeStampBool = true
     var firstTimeStamp: NSTimeInterval = 0 // to be 4 but not 0
     
@@ -43,18 +44,22 @@ class Home: SKScene, GKGameCenterControllerDelegate {
         radialBall = childNodeWithName("radialBall") as! SKSpriteNode
         ropeNode = ballNode.childNodeWithName("rope") as! SKSpriteNode
         springField = radialBall.childNodeWithName("springField") as! SKFieldNode
+        playLabel = childNodeWithName("playLabel") as! SKLabelNode
 
+        level.childNodeWithName("scrollUp")?.zPosition = -5
+        if let levels = level.levels { levels.hidden = true }
         
         if gameScene.home == nil { gameScene.home = self }
         if gameScene.level == nil { gameScene.level = level }
-        if fromGameScenePassedAll {
-            //print("passed all!")
+        
+        if !musicSet {
+            musicSet = true
+            defaults.setBool(true, forKey: "music")
         }
         
         dropping = false
         firstTimeStamp = 0
         firstTimeStampBool = true
-        fromGameScenePassedAll = false
         springField.enabled = true
         ropeNode.size.height = 40
         ballNode.alpha = 1
@@ -96,9 +101,12 @@ class Home: SKScene, GKGameCenterControllerDelegate {
                 camera.position.y.clamp(screenHeight / 2, -screenHeight / 2)
                 if ballNode.physicsBody?.velocity.dy > 0 {
                     ballNode.runAction(SKAction.fadeInWithDuration(0.6))
+                    playLabel.runAction(SKAction.fadeInWithDuration(0.6))
                 } else if ballNode.physicsBody?.velocity.dy < 0 {
                     let dtime = NSTimeInterval((ballNode.position.y + screenHeight / 2) / -ballNode.physicsBody!.velocity.dy)
+                    let dptime = NSTimeInterval((ballNode.position.y - 100) / -ballNode.physicsBody!.velocity.dy)
                     ballNode.runAction(SKAction.fadeOutWithDuration(dtime))
+                    playLabel.runAction(SKAction.fadeOutWithDuration(dptime))
                 }
                 
                 if ballNode.position.y < -screenHeight / 2 - 50 {

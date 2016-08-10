@@ -35,8 +35,6 @@ struct ObjState {
 class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelegate {
     
     let pai = CGFloat(M_PI)
-    let screenWidth: CGFloat = 375
-    let screenHeidht: CGFloat = 667
     let menuHeight: CGFloat = 65
     let ballRadius: CGFloat = 19
     
@@ -536,7 +534,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             var pos = ballNode.position
             pos.x = pos.x <= ballRadius ? ballRadius : pos.x
             pos.x = pos.x >= screenWidth - ballRadius ? screenWidth - ballRadius : pos.x
-            pos.y = pos.y >= screenHeidht - ballRadius ? screenHeidht - ballRadius : pos.y
+            pos.y = pos.y >= screenHeight - ballRadius ? screenHeight - ballRadius : pos.y
             pos.y = pos.y <= menuHeight + ballRadius ? menuHeight + ballRadius : pos.y
             ballNode.position = pos
             if isBallInArea(startNode, hard: true) /*&& noOverlap()*/ {
@@ -700,17 +698,52 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             resultNode.text = "PASS"
             resultNode.fontSize = 120
             resultNode.fontColor = startNode.color
-            bestTime = defaults.doubleForKey("best\(nowLevelNum)") ?? 0
+            bestTime = defaults.doubleForKey("best\(nowLevelNum)")
+            if bestTime == 0 { bestTime = 10 }
             bestTimeScore()
             state = .GameOverPass
         } else {
             return
         }
         passedLevelNumCount()
+        let localPlayer = GKLocalPlayer.localPlayer()
+        if localPlayer.authenticated {
+            let board = GKLeaderboard()
+            board.timeScope = .AllTime
+            board.identifier = "level\(nowLevelNum)"
+            board.loadScoresWithCompletionHandler { (score : [GKScore]?, error:NSError?) -> Void in
+                if error != nil {
+                    
+                } else {
+                    if let n = board.localPlayerScore?.rank {
+                        var s = ""
+                        switch n / 10 {
+                        case 1:
+                            s = "st"
+                        case 2:
+                            s = "nd"
+                        case 3:
+                            s = "rd"
+                        default:
+                            s = "th"
+                            break
+                        }
+                        self.resultRank.text = "\(n)" + s
+                    } else {
+                        self.resultRank.text = "No rank"
+                    }
+                }
+            }
+        } else {
+            resultRank.text = "No rank"
+        }
+    
+    
         rankLabelLevel.text = "\(passedLevelNum) levels"
         if passedLevelNum == 1 {
             rankLabelLevel.text = "1 level"
         }
+        totalTime = defaults.doubleForKey("totalTime")
         rankLabelTime.text = String(format: "%.3f", totalTime) + " seconds"
         if totalTime == 1 {
             rankLabelTime.text = "1.000 second"
@@ -849,7 +882,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         functionNode.alpha = 0
  
         timeLabel.text = "0.000"
-        bestTime = defaults.doubleForKey("best\(nowLevelNum)") ?? 0
+        bestTime = defaults.doubleForKey("best\(nowLevelNum)")
+        if bestTime == 0 { bestTime = 10 }
         objNodes = levelNode.childNodeWithName("//objNodes")
         startNode = levelNode.childNodeWithName("//start") as! SKSpriteNode
         endNode = levelNode.childNodeWithName("//end") as! SKSpriteNode
@@ -858,6 +892,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         tutorialLayer = levelNode.childNodeWithName("//tutorialLayer")
         tutorialLayerBg = tutorialLayer?.childNodeWithName("tutorialBg") as? SKSpriteNode
         countObjNodeIndex()
+        level.checkTimeScore()
 
         nowNode.position = startNode.parent!.position // init position
         lastTouchLocation = ballNode.position
@@ -917,6 +952,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                     self.tutorialState = .Done
                 }
             }
+        } else {
+            tutorialState = .Done
         }
     }
     
@@ -944,7 +981,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
 
     func passedAllLevels() -> Void {
         defaults.setBool(true, forKey: "passedAll")
-        if let scene = Home(fileNamed: "Home") {
+        defaults.synchronize()
+        if let scene = Level(fileNamed: "Level") {
             let skView = self.view as SKView!
             /* Sprite Kit applies additional optimizations to improve rendering performance */
             skView.ignoresSiblingOrder = true
@@ -955,7 +993,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     }
     
     func bestTimeScore() -> Void {
-        if pastTime > 0 && Double(pastTime) < bestTime || bestTime == 0 {
+        if pastTime > 0 && Double(pastTime) < bestTime && bestTime != 10 || bestTime == 10 {
             totalTime -= bestTime
             bestTime = Double(pastTime)
             totalTime += bestTime
@@ -993,38 +1031,38 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             
             if r && f {
                 // both icons show
-                if pos.x > 0 && pos.x < screenWidth && pos.y > menuHeight && pos.y < screenHeidht {
+                if pos.x > 0 && pos.x < screenWidth && pos.y > menuHeight && pos.y < screenHeight {
                     // inside screen
-                    if pos.x > c && pos.x < screenWidth - c && pos.y > c && pos.y < screenHeidht - c / 2 {
+                    if pos.x > c && pos.x < screenWidth - c && pos.y > c && pos.y < screenHeight - c / 2 {
                         // centre
                         rPos.x += d
                         fPos.x += -d
-                    } else if pos.x <= screenWidth / 2 && pos.y <= screenHeidht / 2 {
+                    } else if pos.x <= screenWidth / 2 && pos.y <= screenHeight / 2 {
                         // bottom left
                         rPos.x += d
                         rPos.y += d / 3
                         fPos.x += d / 3
                         fPos.y += d
-                    } else if pos.x >= screenWidth / 2 && pos.y <= screenHeidht / 2 {
+                    } else if pos.x >= screenWidth / 2 && pos.y <= screenHeight / 2 {
                         // bottom right
                         rPos.x += -d
                         rPos.y += d / 3
                         fPos.x += -d / 3
                         fPos.y += d
-                    } else if pos.x <= screenWidth / 2 && pos.y >= screenHeidht / 2 {
+                    } else if pos.x <= screenWidth / 2 && pos.y >= screenHeight / 2 {
                         // top left
                         rPos.x += d
                         rPos.y += -d / 3
                         fPos.x += d / 3
                         fPos.y += -d
-                    } else if pos.x >= screenWidth / 2 && pos.y >= screenHeidht / 2 {
+                    } else if pos.x >= screenWidth / 2 && pos.y >= screenHeight / 2 {
                         // top right
                         rPos.x += -d
                         rPos.y += -d / 3
                         fPos.x += -d / 3
                         fPos.y += -d
                     }
-                } else if pos.y > menuHeight && pos.y < screenHeidht {
+                } else if pos.y > menuHeight && pos.y < screenHeight {
                     // top and bottom inside, left and right outside
                     if pos.x <= 0 {
                         // left outside
@@ -1039,7 +1077,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                         // bottom inside, nearly border corner
                         rPos.y += d
                         fPos.y += d / 3
-                    } else if pos.y > screenHeidht - d {
+                    } else if pos.y > screenHeight - d {
                         // top inside, nearly border corner
                         rPos.y += -d / 3
                         fPos.y += -d
@@ -1054,7 +1092,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                         // bottom outside
                         rPos.y += d * 1.5
                         fPos.y += d * 1.5
-                    } else if pos.y >= screenHeidht {
+                    } else if pos.y >= screenHeight {
                         // top outside
                         rPos.y += -d * 1.5
                         fPos.y += -d * 1.5
@@ -1077,7 +1115,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                 // one icon shows
                 if pos.x < 284 {
                     // left side
-                    if pos.y > screenHeidht - c {
+                    if pos.y > screenHeight - c {
                         // top
                         rPos.x += d / 2
                         fPos.x += d / 2
@@ -1094,7 +1132,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                         rPos.x += d
                         fPos.x += d
                     }
-                } else if pos.y > screenHeidht / 2 {
+                } else if pos.y > screenHeight / 2 {
                     // top right side
                     rPos.x += -d / 2
                     fPos.x += -d / 2
@@ -1134,7 +1172,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         if nowNode == ballNode {
             // ball hit wall cases
             if pos.x <= ballRadius || pos.x >= screenWidth - ballRadius ||
-                pos.y >= screenHeidht - ballRadius || pos.y <= menuHeight + ballRadius {
+                pos.y >= screenHeight - ballRadius || pos.y <= menuHeight + ballRadius {
                 
                 lastTouchNodeLocation = nowNode.position
                 pos = location + lastTouchNodeLocation - lastTouchLocation
@@ -1147,7 +1185,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                 
                 pos.x = pos.x <= ballRadius ? ballRadius : pos.x
                 pos.x = pos.x >= screenWidth - ballRadius ? screenWidth - ballRadius : pos.x
-                pos.y = pos.y >= screenHeidht - ballRadius ? screenHeidht - ballRadius : pos.y
+                pos.y = pos.y >= screenHeight - ballRadius ? screenHeight - ballRadius : pos.y
                 pos.y = pos.y <= menuHeight + ballRadius ? menuHeight + ballRadius : pos.y
                 ballMovingHitWall = true
             } else {
@@ -1415,7 +1453,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         
         let label2 = SKLabelNode(text: "Short Stick")
         let label3 = SKLabelNode(text: "As you can see the small icon below")
-        let label4 = SKLabelNode(text: "Now you can move it like this...")
+        let label4 = SKLabelNode(text: "Now tap to continue to move it ...")
         label2.position = CGPoint(x: 0, y: -24)
         label2.fontSize = 18
         label3.position = CGPoint(x: 0, y: -48)
@@ -1724,7 +1762,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     func passedLevelNumCount() -> Void {
         passedLevelNum = 0
         for n in 1...levelNum {
-            if defaults.doubleForKey("best\(n)") > 0 {
+            if defaults.doubleForKey("best\(n)") < 10 {
                 passedLevelNum += 1
             }
         }
