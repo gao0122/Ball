@@ -16,52 +16,89 @@ let gcWorld = "worldBest"
 
 class Home: SKScene, GKGameCenterControllerDelegate {
     
-    let startPos = CGPoint(x: 217.5, y: 520)
-    let loadTime: NSTimeInterval = 0 // 4 seconds for loading the game
+    let startPos = CGPoint(x: 231, y: 555)
+    let loadTime: NSTimeInterval = 4 // 4 seconds for loading the game
     
     var defaults: NSUserDefaults!
     var level: Level! = Level(fileNamed: "Level") as Level!
     var gameScene: GameScene! = GameScene(fileNamed: "GameScene") as GameScene!
     
-    var ballNode: SKSpriteNode!
+    var ballNode: SKSpriteNode! {
+        didSet {
+            ballNode.removeFromParent()
+            addChild(ballNode)
+            ballNode.position = startPos
+        }
+    }
     var radialBall: SKSpriteNode!
     var ropeNode: SKSpriteNode!
     var springField: SKFieldNode!
     var playLabel: SKLabelNode!
-
+    var springSys: SKNode!
+    var playerName: SKLabelNode! {
+        didSet {
+            playerName.alpha = 0
+        }
+    }
+    
     var waitDelayAtBegin: NSTimeInterval = 0.4
     var dropping = false
     var musicSet = false
-    var firstTimeStampBool = true
-    var firstTimeStamp: NSTimeInterval = 0 // to be 4 but not 0
+    var firstTimestampBool = true
+    var firstTimestamp: NSTimeInterval = 0
+    var nameShown = false
     
     override func didMoveToView(view: SKView) {
         
         defaults = NSUserDefaults.standardUserDefaults()
+        defaults.setBool(true, forKey: "gcPlayer")
         waitDelayAtBegin = ballNode == nil ? loadTime : 0.4
         
-        ballNode = childNodeWithName("ball") as! SKSpriteNode
-        radialBall = childNodeWithName("radialBall") as! SKSpriteNode
+        if defaults.boolForKey("gcPlayer") {
+            defaults.setBool(false, forKey: "gcPlayer")
+            authPlayer()
+        }
+
+        springSys = childNodeWithName("springSys")!
+        ballNode = ballNode == nil ? springSys.childNodeWithName("ball") as! SKSpriteNode : ballNode
+        radialBall = springSys.childNodeWithName("radialBall") as! SKSpriteNode
         ropeNode = ballNode.childNodeWithName("rope") as! SKSpriteNode
         springField = radialBall.childNodeWithName("springField") as! SKFieldNode
         playLabel = childNodeWithName("playLabel") as! SKLabelNode
-
+        playerName = childNodeWithName("playerName") as! SKLabelNode
+        
         level.childNodeWithName("scrollUp")?.zPosition = -5
         if let levels = level.levels { levels.hidden = true }
         
         if gameScene.home == nil { gameScene.home = self }
         if gameScene.level == nil { gameScene.level = level }
         
-        if !musicSet {
-            musicSet = true
-            defaults.setBool(true, forKey: "music")
+        gameScene.passedLevelNum = 0
+        var totalTime: Double = 520
+        for n in 1...levelNum {
+            let board = GKLeaderboard()
+            board.timeScope = .AllTime
+            board.identifier = "level\(n)"
+            board.loadScoresWithCompletionHandler { (score : [GKScore]?, error:NSError?) -> Void in
+                if error != nil {
+                } else {
+                    if let score = board.localPlayerScore {
+                        self.gameScene.passedLevelNum += 1
+                        let time = Double(score.value) / 1000
+                        totalTime -= 10
+                        totalTime += time
+                        self.defaults.setDouble(time, forKey: "best\(n)")
+                        self.defaults.synchronize()
+                    }
+                }
+            }
         }
-        
+
+        nameShown = false
         dropping = false
-        firstTimeStamp = 0
-        firstTimeStampBool = true
+        firstTimestamp = 0
+        firstTimestampBool = true
         springField.enabled = true
-        ropeNode.size.height = 40
         ballNode.alpha = 1
         ballNode.position = startPos
         ballNode.physicsBody?.mass = 0.7
@@ -70,28 +107,38 @@ class Home: SKScene, GKGameCenterControllerDelegate {
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        if dropping {
-            for touch in touches {
-                let node = nodeAtPoint(touch.locationInNode(self))
-                springField.enabled = !springField.enabled
-                if node == ballNode {
-                    
-                }
-            }
+        if dropping && touches.count == 1 {
+            springField.enabled = !springField.enabled
         }
     }
     
     override func update(currentTime: NSTimeInterval) {
+        if !nameShown && GKLocalPlayer.localPlayer().authenticated {
+            if let alias = GKLocalPlayer.localPlayer().alias {
+                let len = CGFloat(alias.characters.count)
+                playerName.text = alias
+                playerName.fontSize = 700 / len
+                while playerName.frame.width > 300 { playerName.fontSize = playerName.fontSize - 7 }
+                playerName.runAction(SKAction.fadeInWithDuration(0.48))
+            }
+            nameShown = true
+        }
         let dy = startPos.y - ballNode.position.y
-        ropeNode.size.height = dy + 40
-        ropeNode.xScale = 1 - ropeNode.size.height / 2000
+        ropeNode.xScale = 1 - (dy + 40) / 2000
         ropeNode.xScale.clamp(0.37, 1)
         
-        if firstTimeStampBool {
-            firstTimeStamp = currentTime
-            firstTimeStampBool = false
+        if firstTimestampBool {
+            firstTimestamp = currentTime
+            firstTimestampBool = false
         }
-        if firstTimeStamp > 0 && currentTime - firstTimeStamp > waitDelayAtBegin {
+        if firstTimestamp > 0 && currentTime - firstTimestamp > waitDelayAtBegin && !dropping {
+            if playerName.alpha < 1 {
+                playerName.runAction(SKAction.fadeInWithDuration(0.28))
+            }
+
+            if GKLocalPlayer.localPlayer().authenticated {
+                defaults.setBool(true, forKey: "gcPlayer")
+            }
             ballNode.physicsBody?.dynamic = true
             dropping = true
         }
@@ -131,6 +178,18 @@ class Home: SKScene, GKGameCenterControllerDelegate {
                 
                 springField.strength += arc4random_uniform(2) == 0 ? 0.1 : -0.1
                 springField.strength.clamp(5.6, 6.6)
+            }
+        }
+    }
+    
+    func authPlayer() -> Void {
+        let localPlayer = GKLocalPlayer.localPlayer()
+        
+        localPlayer.authenticateHandler = {
+            (view, error) in
+            
+            if view != nil {
+                self.view!.window?.rootViewController?.presentViewController(view!, animated: true, completion: nil)
             }
         }
     }

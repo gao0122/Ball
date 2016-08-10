@@ -40,12 +40,13 @@ class Level: SKScene, GKGameCenterControllerDelegate {
     var fromGameScenePassedAll = false
     var firstTimestamp: NSTimeInterval = -1
     
+    var gcd = false
+    
     override func didMoveToView(view: SKView) {
 
         defaults = NSUserDefaults.standardUserDefaults()
         chosen = false
         scrollBegan = false
-        authPlayer()
         
         if fromGameScenePassedAll {
             // pass all 
@@ -80,28 +81,8 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FOR TEST ONLY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if !defaults.boolForKey("unlockedAll") { defaults.setBool(true, forKey: "unlockedAll") }
         
-        gameScene.passedLevelNum = 0
+        self.bestTimeLabel.runAction(SKAction.fadeOutWithDuration(0.12))
         for n in 1...levelNum {
-            let board = GKLeaderboard()
-            board.timeScope = .AllTime
-            board.identifier = "level\(n)"
-            board.loadScoresWithCompletionHandler { (score : [GKScore]?, error:NSError?) -> Void in
-                if error != nil {
-                } else {
-                    if let score = board.localPlayerScore {
-                        self.gameScene.passedLevelNum += 1
-                        let time = Double(score.value) / 1000
-                        self.totalTime -= 10
-                        self.totalTime += time
-                        self.defaults.setDouble(time, forKey: "best\(n)")
-                        self.defaults.synchronize()
-                    }
-                    if n == levelNum {
-                        self.bestTimeLabel.runAction(SKAction.fadeOutWithDuration(0.12))
-                    }
-                }
-            }
-
             let node = levels.childNodeWithName("level\(n)") as! SKLabelNode
             
             if defaults.doubleForKey("best\(n)") == 0 {
@@ -132,13 +113,12 @@ class Level: SKScene, GKGameCenterControllerDelegate {
             let cameraMove = SKAction.moveTo(CGPoint(x: self.camera!.position.x, y: screenHeight * 1.5), duration: 1)
             self.camera?.runAction(cameraMove)
         }
-        buttonGC.selectedHandler = showLeaderBoard
+        buttonGC.selectedHandler = gameCenter
         
         checkTimeScore()
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        checkTimeScore()
         if levels.alpha < 1 { levels.runAction(SKAction.fadeInWithDuration(0.21)) }
         if chosen { return }
         if touches.count == 1 {
@@ -186,7 +166,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         } else {
             let dtime = currentTime - firstTimestamp
             if (dtime > 4 && dtime < 4.23) || (dtime > 7 && dtime < 7.23) {
-                checkTimeScore()
+                // do sth at 4th seconds and 7th seconds
             }
         }
         if camera?.position.y == screenHeight * 1.5 {
@@ -195,7 +175,6 @@ class Level: SKScene, GKGameCenterControllerDelegate {
             skView.showsPhysics = showPhy
             skView.ignoresSiblingOrder = true
             home.scaleMode = scaleMode
-            home.ropeNode.size.height = 40
             home.ballNode.removeAllActions()
             home.ballNode.hidden = false
             home.ballNode.alpha = 1
@@ -236,31 +215,6 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         }
     }
     
-    func gameCenterViewControllerDidFinish(gameCenterViewController: GKGameCenterViewController) {
-        gameCenterViewController.dismissViewControllerAnimated(true, completion: nil)
-    }
-    
-    func authPlayer() -> Void {
-        let localPlayer = GKLocalPlayer.localPlayer()
-        
-        localPlayer.authenticateHandler = {
-            (view, error) in
-            
-            if view != nil {
-                self.view!.window?.rootViewController?.presentViewController(view!, animated: true, completion: nil)
-            }
-        }
-    }
-
-    func showLeaderBoard() -> Void {
-        let viewController = self.view!.window?.rootViewController
-        let gcvc = GKGameCenterViewController()
-        gcvc.viewState = GKGameCenterViewControllerState.Leaderboards
-        
-        gcvc.gameCenterDelegate = self
-        viewController?.presentViewController(gcvc, animated: true, completion: nil)
-    }
-    
     func checkTimeScore() -> Void {
         var total: Double = 520
         for n in 1...levelNum {
@@ -270,25 +224,53 @@ class Level: SKScene, GKGameCenterControllerDelegate {
                 total += time
             }
         }
-        if total != totalTime {
-            totalTime = total
-            defaults.setDouble(total, forKey: "totalTime")
-            defaults.synchronize()
-            
-            let change: dispatch_block_t = {
-                if self.totalTime == 1 {
-                    self.bestTimeLabel.text = String(format: "%.3f", self.totalTime) + " second"
-                } else {
-                    self.bestTimeLabel.text = String(format: "%.3f", self.totalTime) + " seconds"
-                }
-            }
-            let fadeOut = SKAction.fadeOutWithDuration(0.21)
-            let fadeIn = SKAction.fadeInWithDuration(0.23)
-            bestTimeLabel.runAction(SKAction.sequence([fadeOut, fadeIn]))
-            afterDelay(0.21, runBlock: change)
-        } else if bestTimeLabel.alpha < 1 {
-            bestTimeLabel.runAction(SKAction.fadeInWithDuration(0.23))
+        totalTime = total
+        defaults.setDouble(total, forKey: "totalTime")
+        defaults.synchronize()
+    
+        //let change: dispatch_block_t = {}
+        if self.totalTime == 1 {
+            self.bestTimeLabel.text = String(format: "%.3f", self.totalTime) + " second"
+        } else {
+            self.bestTimeLabel.text = String(format: "%.3f", self.totalTime) + " seconds"
+        }
+        bestTimeLabel.runAction(SKAction.fadeInWithDuration(0.23))
+    }
+    
+    func gameCenter() -> Void {
+        if GKLocalPlayer.localPlayer().authenticated {
+            showLeaderBoard()
+        } else {
+            authPlayer()
         }
     }
     
+    func showLeaderBoard() -> Void {
+        let viewController = self.view!.window?.rootViewController
+        let gcvc = GKGameCenterViewController()
+        gcvc.viewState = GKGameCenterViewControllerState.Leaderboards
+        
+        gcvc.gameCenterDelegate = self
+        viewController?.presentViewController(gcvc, animated: true, completion: nil)
+    }
+    
+    func authPlayer() -> Void {
+        if !gcd {
+            gcd = true
+            let localPlayer = GKLocalPlayer.localPlayer()
+            localPlayer.authenticateHandler = {
+                (view, error) in
+                if view != nil {
+                    self.view!.window?.rootViewController?.presentViewController(view!, animated: true, completion: nil)
+                }
+            }
+        } else {
+            showLeaderBoard()
+        }
+    }
+    
+    func gameCenterViewControllerDidFinish(gameCenterViewController: GKGameCenterViewController) {
+        gameCenterViewController.dismissViewControllerAnimated(true, completion: nil)
+    }
+
 }

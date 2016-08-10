@@ -100,7 +100,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     var scoreBoard: SKSpriteNode!
     var resultNode: SKLabelNode!
     var resultRank: SKLabelNode!
-    var buttonGC: SKSpriteNode!
+    var buttonGC: MSButtonNode!
     
     var defaults: NSUserDefaults!
     var totalTime: Double = 0
@@ -214,7 +214,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         scoreBoard = self.childNodeWithName("scoreBoard") as! SKSpriteNode
         resultNode = scoreBoard.childNodeWithName("resultNode") as! SKLabelNode
         resultRank = menuNode.childNodeWithName("rankResultRanking") as! SKLabelNode
-        buttonGC = menuNode.childNodeWithName("gameCenter") as! SKSpriteNode
+        buttonGC = menuNode.childNodeWithName("gameCenter") as! MSButtonNode
         
         menuNode.childNodeWithName("menuBgd")!.alpha = 0.892
         
@@ -259,6 +259,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                 }
             }
         }
+        buttonGC.selectedHandler = showLeaderBoard
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -759,7 +760,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         
         var reload = false
         if state == .GameOverPass {
-            if passedLevelNum == levelNum {
+            if passedLevelNum == levelNum && nowLevelNum == levelNum {
                 passedAllLevels()
                 return
             } else {
@@ -840,9 +841,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         mask.alpha = 0.78
     }
     
-    func initGame() -> Void {
-        let initial = "this is initGame"
-        
+    func initGame() -> Void {        
         let tt = SKTexture(imageNamed: "ballIcon")
         objIconNode.size = tt.size()
         objIconNode.texture = tt
@@ -982,14 +981,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     func passedAllLevels() -> Void {
         defaults.setBool(true, forKey: "passedAll")
         defaults.synchronize()
-        if let scene = Level(fileNamed: "Level") {
-            let skView = self.view as SKView!
-            /* Sprite Kit applies additional optimizations to improve rendering performance */
-            skView.ignoresSiblingOrder = true
-            scene.scaleMode = scaleMode
-            scene.fromGameScenePassedAll = true
-            skView.presentScene(scene)
-        }
+        let skView = self.view as SKView!
+        /* Sprite Kit applies additional optimizations to improve rendering performance */
+        skView.ignoresSiblingOrder = true
+        level.fromGameScenePassedAll = true
+        skView.presentScene(level)
     }
     
     func bestTimeScore() -> Void {
