@@ -902,6 +902,37 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         
         levelTutorial = levelTutorialStates
         initTutorial() // make a tutorial if necessary
+        
+        if let movingBlock = levelNode.childNodeWithName("//movingBlock") as? SKSpriteNode {
+            var dis = 200
+            var tmL: SKActionTimingMode = SKActionTimingMode.Linear
+            var tmR: SKActionTimingMode = SKActionTimingMode.Linear
+            switch nowLevelNum {
+            case 11:
+                tmL = SKActionTimingMode.EaseInEaseOut
+            case 34:
+                tmR = SKActionTimingMode.EaseInEaseOut
+            default:
+                break
+            }
+            var mLeft = SKAction.moveBy(CGVector(dx: dis, dy: 0), duration: 1.5)
+            var mRight = SKAction.moveBy(CGVector(dx: -dis, dy: 0), duration: 1.5)
+            var mLR = SKAction.sequence([mLeft, mRight])
+            let action = SKAction.repeatActionForever(mLR)
+            mLeft.timingMode = tmL
+            mRight.timingMode = tmR
+            movingBlock.runAction(action)
+            
+            if let mB2 = levelNode.childNodeWithName("//movingBlock2") as? SKSpriteNode {
+                dis = 292
+                mLeft = SKAction.moveBy(CGVector(dx: dis, dy: 0), duration: 0.96)
+                mRight = SKAction.moveBy(CGVector(dx: -dis, dy: 0), duration: 0.96)
+                mRight.timingMode = SKActionTimingMode.EaseIn
+                mLeft.timingMode = SKActionTimingMode.EaseOut
+                mLR = SKAction.sequence([mLeft, mRight])
+                mB2.runAction(SKAction.repeatActionForever(mLR))
+            }
+        }
     }
     
     func countObjNodeIndex() -> Void {

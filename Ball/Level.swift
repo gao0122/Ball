@@ -70,7 +70,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         levels.position = CGPoint(x: screenWidth / 2, y: 366)
         levels.hidden = false
         levels.alpha = 0
-        levels.runAction(SKAction.fadeInWithDuration(0.42))
+        levels.runAction(SKAction.afterDelay(0.19, performAction: SKAction.fadeInWithDuration(0.42)))
         childNodeWithName("scrollUp")?.zPosition = 5
         
         bestTimeLabel.alpha = 0
@@ -78,37 +78,10 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         firstTimestamp = -1
         fromGameScenePassedAll = false
 
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FOR TEST ONLY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // FOR TEST ONLY!!!
         if !defaults.boolForKey("unlockedAll") { defaults.setBool(true, forKey: "unlockedAll") }
         
-        self.bestTimeLabel.runAction(SKAction.fadeOutWithDuration(0.12))
-        for n in 1...levelNum {
-            let node = levels.childNodeWithName("level\(n)") as! SKLabelNode
-            
-            if defaults.doubleForKey("best\(n)") == 0 {
-                defaults.setDouble(10, forKey: "best\(n)")
-            }
-            loadLevelN(n)
-            if defaults.boolForKey("passedAll") {
-                // passed all - UI
-                node.fontName = fontPass
-                node.fontColor = UIColor(red: 28 / 256, green: 242 / 256, blue: 118 / 256, alpha: 1)
-            } else {
-                if defaults.doubleForKey("best\(n)") < 10 {
-                    // pass UI
-                    node.fontName = fontPass
-                    node.fontColor = UIColor(red: 28 / 256, green: 242 / 256, blue: 118 / 256, alpha: 1)
-                } else {
-                    // locked UI
-                    node.fontName = fontDefault
-                }
-                if defaults.boolForKey("unlockedAll") {
-                    // unlocked - UI
-                    node.fontName = fontPass
-                }
-            }
-        }
-        
+        checkLevels()
         buttonHome.selectedHandler = {
             let cameraMove = SKAction.moveTo(CGPoint(x: self.camera!.position.x, y: screenHeight * 1.5), duration: 1)
             self.camera?.runAction(cameraMove)
@@ -119,6 +92,10 @@ class Level: SKScene, GKGameCenterControllerDelegate {
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        if GKLocalPlayer.localPlayer().authenticated {
+            defaults.setBool(false, forKey: "notGcPlayer")
+            defaults.synchronize()
+        }
         if levels.alpha < 1 { levels.runAction(SKAction.fadeInWithDuration(0.21)) }
         if chosen { return }
         if touches.count == 1 {
@@ -135,7 +112,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
             let touch = touches.first!
             let pos = touch.locationInNode(self)
             levels.position.y = pos.y - lastTouchPos.y + lastLevelPos.y
-            levels.position.y.clamp(366, 566)
+            levels.position.y.clamp(366, 800)
         }
     }
     
@@ -150,7 +127,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
             let node = nodeAtPoint(pos)
             for n in 1...levelNum {
                 if node.name == "level\(n)" || node.name == "level\(n)Area" {
-                    if n == 1 || defaults.doubleForKey("best\(n)") < 10 || defaults.doubleForKey("best\(n - 1)") < 10  || defaults.boolForKey("unlockedAll") {
+                    if n <= 15 || defaults.doubleForKey("best\(n)") < 10 || defaults.doubleForKey("best\(n - 1)") < 10  || defaults.boolForKey("unlockedAll") {
                         
                         moveToLevelN(n, name: node.name!)
                         return
@@ -257,6 +234,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
     func authPlayer() -> Void {
         if !gcd {
             gcd = true
+
             let localPlayer = GKLocalPlayer.localPlayer()
             localPlayer.authenticateHandler = {
                 (view, error) in
@@ -273,4 +251,44 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         gameCenterViewController.dismissViewControllerAnimated(true, completion: nil)
     }
 
+    func checkLevels() -> Void {
+        let green = UIColor(red: 28 / 256, green: 242 / 256, blue: 118 / 256, alpha: 1)
+        self.bestTimeLabel.runAction(SKAction.fadeOutWithDuration(0.12))
+        for n in 1...levelNum {
+            let node = levels.childNodeWithName("level\(n)") as! SKLabelNode
+            var score = defaults.doubleForKey("best\(n)")
+            if score == 0 {
+                defaults.setDouble(10, forKey: "best\(n)")
+                defaults.synchronize()
+                score = 10
+            }
+            
+            loadLevelN(n)
+            
+            if defaults.boolForKey("passedAll") {
+                // passed all - UI
+                node.fontName = fontPass
+                node.fontColor = green
+            } else {
+                if score < 10 {
+                    // pass UI
+                    node.fontName = fontPass
+                    node.fontColor = green
+                } else {
+                    // locked UI
+                    if score == 10 && defaults.doubleForKey("best\(n - 1)") < 10 {
+                        node.fontName = fontPass
+                        node.fontColor = UIColor.whiteColor()
+                    } else {
+                        node.fontName = fontDefault
+                        node.fontColor = UIColor.whiteColor()
+                    }
+                }
+                if defaults.boolForKey("unlockedAll") || n <= 15 {
+                    // unlocked - UI
+                    node.fontName = fontPass
+                }
+            }   
+        }
+    }
 }

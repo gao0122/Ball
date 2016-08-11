@@ -9,7 +9,7 @@
 import SpriteKit
 import GameKit
 
-let levelNum = 15
+let levelNum = 52
 let screenHeight: CGFloat = 667
 let screenWidth: CGFloat = 375
 let gcWorld = "worldBest"
@@ -51,11 +51,11 @@ class Home: SKScene, GKGameCenterControllerDelegate {
     override func didMoveToView(view: SKView) {
         
         defaults = NSUserDefaults.standardUserDefaults()
-        defaults.setBool(true, forKey: "gcPlayer")
         waitDelayAtBegin = ballNode == nil ? loadTime : 0.4
         
-        if defaults.boolForKey("gcPlayer") {
-            defaults.setBool(false, forKey: "gcPlayer")
+        if !defaults.boolForKey("notGcPlayer") {
+            defaults.setBool(true, forKey: "notGcPlayer")
+            defaults.synchronize()
             authPlayer()
         }
 
@@ -113,7 +113,7 @@ class Home: SKScene, GKGameCenterControllerDelegate {
     }
     
     override func update(currentTime: NSTimeInterval) {
-        if !nameShown && GKLocalPlayer.localPlayer().authenticated {
+        if !nameShown && GKLocalPlayer.localPlayer().playerID != nil {
             if let alias = GKLocalPlayer.localPlayer().alias {
                 let len = CGFloat(alias.characters.count)
                 playerName.text = alias
@@ -137,7 +137,8 @@ class Home: SKScene, GKGameCenterControllerDelegate {
             }
 
             if GKLocalPlayer.localPlayer().authenticated {
-                defaults.setBool(true, forKey: "gcPlayer")
+                defaults.setBool(false, forKey: "notGcPlayer")
+                defaults.synchronize()
             }
             ballNode.physicsBody?.dynamic = true
             dropping = true
@@ -184,10 +185,8 @@ class Home: SKScene, GKGameCenterControllerDelegate {
     
     func authPlayer() -> Void {
         let localPlayer = GKLocalPlayer.localPlayer()
-        
         localPlayer.authenticateHandler = {
             (view, error) in
-            
             if view != nil {
                 self.view!.window?.rootViewController?.presentViewController(view!, animated: true, completion: nil)
             }
@@ -209,7 +208,25 @@ let objs: [String: [String: String]] = [
         "categoryBm": "16",
         "name": "Bounce I"
     ],
+    "bounceIR2": [
+        "halfWidth": "15",
+        "rf": "1",
+        "categoryBm": "16",
+        "name": "Bounce I"
+    ],
+    "bounceIR3": [
+        "halfWidth": "15",
+        "rf": "1",
+        "categoryBm": "16",
+        "name": "Bounce I"
+    ],
     "bounceI": [
+        "halfWidth": "15",
+        "rf": "0",
+        "categoryBm": "16",
+        "name": "Bounce I"
+    ],
+    "bounceI2": [
         "halfWidth": "15",
         "rf": "0",
         "categoryBm": "16",
@@ -221,13 +238,31 @@ let objs: [String: [String: String]] = [
         "categoryBm": "2",
         "name": "Bounce"
     ],
+    "bounceR2": [
+        "halfWidth": "21",
+        "rf": "1",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
     "bounceF": [
         "halfWidth": "21",
         "rf": "2",
         "categoryBm": "2",
         "name": "Bounce"
     ],
+    "bounceF2": [
+        "halfWidth": "21",
+        "rf": "2",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
     "bounceRF": [
+        "halfWidth": "21",
+        "rf": "3",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
+    "bounceRF2": [
         "halfWidth": "21",
         "rf": "3",
         "categoryBm": "2",
@@ -245,6 +280,18 @@ let objs: [String: [String: String]] = [
         "categoryBm": "4",
         "name": "Short stick"
     ],
+    "shortStickM2": [
+        "halfWidth": "48",
+        "rf": "2",
+        "categoryBm": "4",
+        "name": "Short stick"
+    ],
+    "shortStickM3": [
+        "halfWidth": "48",
+        "rf": "2",
+        "categoryBm": "4",
+        "name": "Short stick"
+    ],
     "shortStick": [
         "halfWidth": "48",
         "rf": "0",
@@ -252,6 +299,18 @@ let objs: [String: [String: String]] = [
         "name": "Short stick"
     ],
     "bounce": [
+        "halfWidth": "21",
+        "rf": "0",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
+    "bounce2": [
+        "halfWidth": "21",
+        "rf": "0",
+        "categoryBm": "2",
+        "name": "Bounce"
+    ],
+    "bounce3": [
         "halfWidth": "21",
         "rf": "0",
         "categoryBm": "2",
