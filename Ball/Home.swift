@@ -50,6 +50,8 @@ class Home: SKScene, GKGameCenterControllerDelegate {
     
     override func didMoveToView(view: SKView) {
         
+        NSLocale.preferredLanguages()
+        
         defaults = NSUserDefaults.standardUserDefaults()
         waitDelayAtBegin = ballNode == nil ? loadTime : 0.4
         
@@ -317,6 +319,12 @@ let objs: [String: [String: String]] = [
         "name": "Bounce"
     ],
     "stick": [
+        "halfWidth": "42",
+        "rf": "3",
+        "categoryBm": "8",
+        "name": "Stick"
+    ],
+    "stick2": [
         "halfWidth": "42",
         "rf": "3",
         "categoryBm": "8",

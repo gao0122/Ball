@@ -55,6 +55,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         didSet {
             endNode.color = SKColor(red: 255 / 256, green: 48 / 256, blue: 44 / 256, alpha: 1)
             cropRoundCorner(endNode)
+            if nowLevelNum == 49 {
+                let end = endNode.parent!
+                let left = SKAction.moveTo(CGPoint(x: 180, y: end.position.y), duration: 1)
+                let right = SKAction.moveTo(CGPoint(x: 333, y: end.position.y), duration: 1)
+                let lr = SKAction.sequence([left, right])
+                left.timingMode = SKActionTimingMode.EaseIn
+                right.timingMode = SKActionTimingMode.EaseOut
+                end.runAction(SKAction.repeatActionForever(lr))
+            }
         }
     }
     var nowNode: SKNode! {
@@ -93,7 +102,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     var levelNumLabel: SKLabelNode!
     var rotationNode: SKSpriteNode!
     var functionNode: SKSpriteNode!
-    var obstacleLayer: SKNode?
+    var obstacleLayer: SKNode? {
+        didSet {
+            if nowLevelNum == 52 {
+                let pr = CGPoint(x: 250, y: 432)
+                let pl = CGPoint(x: 125, y: 432)
+                let l = SKAction.moveTo(pl, duration: 1)
+                let r = SKAction.moveTo(pr, duration: 1)
+                let lr = SKAction.sequence([l, r])
+                let act = SKAction.repeatActionForever(lr)
+                l.timingMode = SKActionTimingMode.EaseInEaseOut
+                r.timingMode = SKActionTimingMode.EaseInEaseOut
+                obstacleLayer?.children.first!.runAction(act)
+            }
+        }
+    }
     var stateBar: SKSpriteNode!
     var tutorialLayer: SKNode?
     var tutorialLayerBg: SKSpriteNode?
