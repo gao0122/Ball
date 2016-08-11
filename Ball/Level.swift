@@ -79,7 +79,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         fromGameScenePassedAll = false
 
         // FOR TEST ONLY!!!
-        if !defaults.boolForKey("unlockedAll") { defaults.setBool(true, forKey: "unlockedAll") }
+        //if !defaults.boolForKey("unlockedAll") { defaults.setBool(true, forKey: "unlockedAll") }
         
         checkLevels()
         buttonHome.selectedHandler = {
