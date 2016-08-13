@@ -27,6 +27,9 @@ class GameViewController: UIViewController {
             skView.showsNodeCount = showNodes
             scene.scaleMode = scaleMode
 
+            //scene.size = skView.frame.size
+            
+            scene.anchorPoint.x = 0.5
             skView.presentScene(scene)
         }
     }

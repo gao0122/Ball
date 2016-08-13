@@ -251,6 +251,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             
             let skView = self.view as SKView!
             self.level.scaleMode = self.scaleMode
+            self.level.anchorPoint.x = 0.5
             
             /* Sprite Kit applies additional optimizations to improve rendering performance */
             skView.ignoresSiblingOrder = true

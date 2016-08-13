@@ -11,6 +11,8 @@ import GameKit
 
 class Level: SKScene, GKGameCenterControllerDelegate {
     
+    let unlock = false
+    
     let fontPass = "GillSans"
     let fontDefault = "GillSans-Light"
     
@@ -54,6 +56,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
 
         /* Set the scale mode to scale to fit the window */
         gameScene.scaleMode = scaleMode
+        //gameScene.anchorPoint.x = 0.5
         if gameScene.level == nil { gameScene.level = self }
         gameLevelNode = gameScene.childNodeWithName("levelNode")!
         homeNode = childNodeWithName("homeNode")!
@@ -78,8 +81,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         firstTimestamp = -1
         fromGameScenePassedAll = false
 
-        // FOR TEST ONLY!!!
-        //if !defaults.boolForKey("unlockedAll") { defaults.setBool(true, forKey: "unlockedAll") }
+        defaults.setBool(unlock, forKey: "unlockedAll")
         
         checkLevels()
         buttonHome.selectedHandler = {
@@ -152,6 +154,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
             skView.showsPhysics = showPhy
             skView.ignoresSiblingOrder = true
             home.scaleMode = scaleMode
+            home.anchorPoint.x = 0.5
             home.ballNode.removeAllActions()
             home.ballNode.hidden = false
             home.ballNode.alpha = 1

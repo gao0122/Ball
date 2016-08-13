@@ -171,6 +171,8 @@ class Home: SKScene, GKGameCenterControllerDelegate {
                     
                     /* Set the scale mode to scale to fit the window */
                     level.scaleMode = scaleMode
+                    level.anchorPoint.x = 0.5
+
                     
                     if level.home == nil { level.home = self }
                     if level.gameScene == nil { level.gameScene = gameScene }
