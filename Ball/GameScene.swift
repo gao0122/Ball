@@ -259,6 +259,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         }
         buttonRestart.selectedHandler = {
             if self.state == .GameOverPass || self.state == .GameOverFailed {
+                if self.state == .GameOverPass {
+                    self.nowLevelNum = self.nowLevelNum - 1
+                }
                 self.gameOverNext()
             } else {
                 self.restart(self.nowLevelNum)
@@ -1251,6 +1254,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let dx = location.x - functionNode.position.x
         for child in nowNode.children {
             if let bm = child.physicsBody?.categoryBitMask {
+                if bm < 0 || bm == 4294967295 { continue }
                 switch Int(bm) {
                 case 2:
                     if let bounce = child as? Bounce {
