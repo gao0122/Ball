@@ -6,6 +6,7 @@
 //  Copyright (c) 2016 Yuchao. All rights reserved.
 //
 
+import Foundation
 import UIKit
 import SpriteKit
 

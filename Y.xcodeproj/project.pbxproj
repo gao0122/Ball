@@ -56,6 +56,7 @@
 		005842371D5BD7220094FDB2 /* Level6.sks in Resources */ = {isa = PBXBuildFile; fileRef = 005842331D5BD7220094FDB2 /* Level6.sks */; };
 		005842381D5BD7220094FDB2 /* Level7.sks in Resources */ = {isa = PBXBuildFile; fileRef = 005842341D5BD7220094FDB2 /* Level7.sks */; };
 		005842391D5BD7220094FDB2 /* Level8.sks in Resources */ = {isa = PBXBuildFile; fileRef = 005842351D5BD7220094FDB2 /* Level8.sks */; };
+		00595BF61D64EE3A004D6EBF /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00595BF51D64EE3A004D6EBF /* StoreKit.framework */; };
 		006C55761D31B68900E918E3 /* ShortStick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006C55751D31B68900E918E3 /* ShortStick.swift */; };
 		009C82821D3DF54A00033044 /* BounceI.sks in Resources */ = {isa = PBXBuildFile; fileRef = 009C82811D3DF54A00033044 /* BounceI.sks */; };
 		009E44681D302F8000F8B596 /* Ball.swift in Sources */ = {isa = PBXBuildFile; fileRef = 009E44671D302F8000F8B596 /* Ball.swift */; };
@@ -151,6 +152,7 @@
 		005842331D5BD7220094FDB2 /* Level6.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level6.sks; sourceTree = "<group>"; };
 		005842341D5BD7220094FDB2 /* Level7.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level7.sks; sourceTree = "<group>"; };
 		005842351D5BD7220094FDB2 /* Level8.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level8.sks; sourceTree = "<group>"; };
+		00595BF51D64EE3A004D6EBF /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		006C55751D31B68900E918E3 /* ShortStick.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShortStick.swift; sourceTree = "<group>"; };
 		009C82811D3DF54A00033044 /* BounceI.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = BounceI.sks; sourceTree = "<group>"; };
 		009E44671D302F8000F8B596 /* Ball.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Ball.swift; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				00595BF61D64EE3A004D6EBF /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,6 +211,7 @@
 		000AB5C41D302F0500D75C33 = {
 			isa = PBXGroup;
 			children = (
+				00595BF51D64EE3A004D6EBF /* StoreKit.framework */,
 				000AB5CF1D302F0500D75C33 /* Ball */,
 				000AB5CE1D302F0500D75C33 /* Products */,
 			);
@@ -416,6 +420,11 @@
 					000AB5CC1D302F0500D75C33 = {
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = Z27YUCTD32;
+						SystemCapabilities = {
+							com.apple.InAppPurchase = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};

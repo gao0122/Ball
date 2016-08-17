@@ -8,9 +8,13 @@
 
 import SpriteKit
 import GameKit
+import StoreKit
 
-class Level: SKScene, GKGameCenterControllerDelegate {
+class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate, SKPaymentTransactionObserver {
     
+    var list = [SKProduct]()
+    var p = SKProduct()
+    let unlockId = "YPuzzleUnlockAllLevels"
     let unlock = false
     
     let fontPass = "GillSans"
@@ -29,12 +33,13 @@ class Level: SKScene, GKGameCenterControllerDelegate {
     var buttonHome: MSButtonNode!
     var buttonGC: MSButtonNode!
     var levels: SKNode!
+    var buttonUnlock: MSButtonNode!
     
     var defaults: NSUserDefaults!
     
     var refHome: SKReferenceNode!
     var refLevels = [Int: SKReferenceNode!]()
-
+    
     var scrollBegan = false
     var lastLevelPos: CGPoint!
     var lastTouchPos: CGPoint!
@@ -45,15 +50,15 @@ class Level: SKScene, GKGameCenterControllerDelegate {
     var gcd = false
     
     override func didMoveToView(view: SKView) {
-
+        
         defaults = NSUserDefaults.standardUserDefaults()
         chosen = false
         scrollBegan = false
         
         if fromGameScenePassedAll {
-            // pass all 
+            // pass all
         }
-
+        
         /* Set the scale mode to scale to fit the window */
         gameScene.scaleMode = scaleMode
         //gameScene.anchorPoint.x = 0.5
@@ -75,20 +80,32 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         levels.alpha = 0
         levels.runAction(SKAction.afterDelay(0.19, performAction: SKAction.fadeInWithDuration(0.42)))
         childNodeWithName("scrollUp")?.zPosition = 5
+        buttonUnlock = childNodeWithName("unlockAllArea") as! MSButtonNode
         
         bestTimeLabel.alpha = 0
         totalTime = 520
         firstTimestamp = -1
         fromGameScenePassedAll = false
-
-        defaults.setBool(unlock, forKey: "unlockedAll")
+        
+        //defaults.setBool(unlock, forKey: "unlockedAll")
+        if SKPaymentQueue.canMakePayments() {
+            print("IAP is enabled...")
+            let productId: Set = [unlockId]
+            let request: SKProductsRequest = SKProductsRequest(productIdentifiers: productId)
+            request.delegate = self
+            request.start()
+        } else {
+            print("please enable IAPS")
+        }
         
         checkLevels()
         buttonHome.selectedHandler = {
+            self.levels.runAction(SKAction.fadeOutWithDuration(0.17))
             let cameraMove = SKAction.moveTo(CGPoint(x: self.camera!.position.x, y: screenHeight * 1.5), duration: 1)
             self.camera?.runAction(cameraMove)
         }
         buttonGC.selectedHandler = gameCenter
+        buttonUnlock.selectedHandler = buyUnlock
         
         checkTimeScore()
     }
@@ -102,7 +119,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         if chosen { return }
         if touches.count == 1 {
             let touch = touches.first!
-            let pos = touch.locationInNode(self)  
+            let pos = touch.locationInNode(self)
             lastLevelPos = levels.position
             lastTouchPos = pos
         }
@@ -127,6 +144,13 @@ class Level: SKScene, GKGameCenterControllerDelegate {
             let touch = touches.first!
             let pos = touch.locationInNode(self)
             let node = nodeAtPoint(pos)
+            if node.name == "unlockAll" {
+                buyProduct()
+                return
+            } else if node.name == "restorePurchaseLabel" {
+                restorePurchase()
+                return
+            }
             for n in 1...levelNum {
                 if node.name == "level\(n)" || node.name == "level\(n)Area" {
                     if n <= 15 || defaults.doubleForKey("best\(n)") < 10 || defaults.doubleForKey("best\(n - 1)") < 10  || defaults.boolForKey("unlockedAll") {
@@ -165,6 +189,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
             skView.presentScene(home)
             camera?.position.y = screenHeight / 2
         }
+        
     }
     
     func moveToLevelN(n: Int, name: String!) -> Void {
@@ -207,7 +232,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
         totalTime = total
         defaults.setDouble(total, forKey: "totalTime")
         defaults.synchronize()
-    
+        
         //let change: dispatch_block_t = {}
         if self.totalTime == 1 {
             self.bestTimeLabel.text = String(format: "%.3f", self.totalTime) + " second"
@@ -237,7 +262,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
     func authPlayer() -> Void {
         if !gcd {
             gcd = true
-
+            
             let localPlayer = GKLocalPlayer.localPlayer()
             localPlayer.authenticateHandler = {
                 (view, error) in
@@ -253,7 +278,7 @@ class Level: SKScene, GKGameCenterControllerDelegate {
     func gameCenterViewControllerDidFinish(gameCenterViewController: GKGameCenterViewController) {
         gameCenterViewController.dismissViewControllerAnimated(true, completion: nil)
     }
-
+    
     func checkLevels() -> Void {
         let green = UIColor(red: 28 / 256, green: 242 / 256, blue: 118 / 256, alpha: 1)
         self.bestTimeLabel.runAction(SKAction.fadeOutWithDuration(0.12))
@@ -291,7 +316,89 @@ class Level: SKScene, GKGameCenterControllerDelegate {
                     // unlocked - UI
                     node.fontName = fontPass
                 }
-            }   
+            }
         }
     }
+    
+    func restorePurchase() -> Void {
+        SKPaymentQueue.defaultQueue().addTransactionObserver(self)
+        SKPaymentQueue.defaultQueue().restoreCompletedTransactions()
+        
+        let vc = view?.window?.rootViewController
+        let alert = UIAlertController(title: "Restore purchase", message: "Your purchase has been restored!", preferredStyle: .Alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
+        vc?.presentViewController(alert, animated: true, completion: nil)
+    }
+    
+    func paymentQueueRestoreCompletedTransactionsFinished(queue: SKPaymentQueue) {
+        defaults.setBool(false, forKey: "unlockedAll")
+        for transaction in queue.transactions {
+            print(transaction.error)
+            let id = transaction.payment.productIdentifier
+            print(id)
+            if id == unlockId {
+                print("transaction restored")
+                defaults.setBool(true, forKey: "unlockedAll")
+                checkLevels()
+            }
+        }
+    }
+    
+    func buyUnlock() -> Void {
+        for product in list {
+            let pId = product.productIdentifier
+            if pId == unlockId {
+                p = product
+                buyProduct()
+                break
+            }
+        }
+    }
+    
+    func buyProduct() -> Void {
+        print("buy " + p.productIdentifier)
+        
+        let payment = SKPayment(product: p)
+        SKPaymentQueue.defaultQueue().addTransactionObserver(self)
+        SKPaymentQueue.defaultQueue().addPayment(payment as SKPayment)
+    }
+    
+    func productsRequest(request: SKProductsRequest, didReceiveResponse response: SKProductsResponse) {
+        print("product request")
+        
+        for product in response.products {
+            print("product added")
+            print(product.productIdentifier)
+            print(product.localizedTitle)
+            print(product.localizedDescription)
+            print(product.price)
+            print()
+            list.append(product)
+        }
+    }
+    
+    func paymentQueue(queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+        print("add payment")
+        
+        for transaction in transactions {
+            print(transaction.error)
+            switch transaction.transactionState {
+            case .Purchased:
+                print("buy, unlocked")
+                print(p.productIdentifier)
+                defaults.setBool(true, forKey: "unlockedAll")
+                checkLevels()
+                queue.finishTransaction(transaction)
+            case .Failed:
+                print("failed error")
+                queue.finishTransaction(transaction)
+            default:
+                print("default")
+                print(transaction.transactionState)
+                break
+            }
+            
+        }
+    }
+    
 }
