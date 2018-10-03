@@ -1,3 +1,4 @@
+
 //
 //  Level.swift
 //  Don't Drop Me!
@@ -35,7 +36,7 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
     var levels: SKNode!
     var buttonUnlock: MSButtonNode!
     
-    var defaults: NSUserDefaults!
+    var defaults: UserDefaults!
     
     var refHome: SKReferenceNode!
     var refLevels = [Int: SKReferenceNode!]()
@@ -45,13 +46,13 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
     var lastTouchPos: CGPoint!
     
     var fromGameScenePassedAll = false
-    var firstTimestamp: NSTimeInterval = -1
+    var firstTimestamp: TimeInterval = -1
     
-    var gcd = false
+    var gcd = false // game center authenticated
     
-    override func didMoveToView(view: SKView) {
+    override func didMove(to view: SKView) {
         
-        defaults = NSUserDefaults.standardUserDefaults()
+        defaults = UserDefaults.standard
         chosen = false
         scrollBegan = false
         
@@ -63,24 +64,24 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         gameScene.scaleMode = scaleMode
         //gameScene.anchorPoint.x = 0.5
         if gameScene.level == nil { gameScene.level = self }
-        gameLevelNode = gameScene.childNodeWithName("levelNode")!
-        homeNode = childNodeWithName("homeNode")!
+        gameLevelNode = gameScene.childNode(withName: "levelNode")!
+        homeNode = childNode(withName: "homeNode")!
         if refHome == nil {
-            refHome = SKReferenceNode(URL: NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource("Home", ofType: "sks")!))
+            refHome = SKReferenceNode(url: URL(fileURLWithPath: Bundle.main.path(forResource: "Home", ofType: "sks")!))
             homeNode.addChild(self.refHome)
         }
         
-        menuNode = childNodeWithName("menu")!
-        bestTimeLabel = menuNode.childNodeWithName("bestTimeLabel") as! SKLabelNode
-        buttonHome = menuNode.childNodeWithName("buttonHome") as! MSButtonNode
-        buttonGC = menuNode.childNodeWithName("gameCenter") as! MSButtonNode
-        levels = childNodeWithName("levels")!
+        menuNode = childNode(withName: "menu")!
+        bestTimeLabel = menuNode.childNode(withName: "bestTimeLabel") as! SKLabelNode
+        buttonHome = menuNode.childNode(withName: "buttonHome") as! MSButtonNode
+        buttonGC = menuNode.childNode(withName: "gameCenter") as! MSButtonNode
+        levels = childNode(withName: "levels")!
         levels.position = CGPoint(x: screenWidth / 2, y: 366)
-        levels.hidden = false
+        levels.isHidden = false
         levels.alpha = 0
-        levels.runAction(SKAction.afterDelay(0.19, performAction: SKAction.fadeInWithDuration(0.42)))
-        childNodeWithName("scrollUp")?.zPosition = 5
-        buttonUnlock = childNodeWithName("unlockAllArea") as! MSButtonNode
+        levels.run(SKAction.afterDelay(0.19, performAction: SKAction.fadeIn(withDuration: 0.42)))
+        childNode(withName: "scrollUp")?.zPosition = 5
+        buttonUnlock = childNode(withName: "unlockAllArea") as! MSButtonNode
         
         bestTimeLabel.alpha = 0
         totalTime = 520
@@ -100,9 +101,9 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         
         checkLevels()
         buttonHome.selectedHandler = {
-            self.levels.runAction(SKAction.fadeOutWithDuration(0.17))
-            let cameraMove = SKAction.moveTo(CGPoint(x: self.camera!.position.x, y: screenHeight * 1.5), duration: 1)
-            self.camera?.runAction(cameraMove)
+            self.levels.run(SKAction.fadeOut(withDuration: 0.17))
+            let cameraMove = SKAction.move(to: CGPoint(x: self.camera!.position.x, y: screenHeight * 1.5), duration: 1)
+            self.camera?.run(cameraMove)
         }
         buttonGC.selectedHandler = gameCenter
         buttonUnlock.selectedHandler = buyUnlock
@@ -110,40 +111,40 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         checkTimeScore()
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        if GKLocalPlayer.localPlayer().authenticated {
-            defaults.setBool(false, forKey: "notGcPlayer")
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if GKLocalPlayer.localPlayer().isAuthenticated {
+            defaults.set(false, forKey: "notGcPlayer")
             defaults.synchronize()
         }
-        if levels.alpha < 1 { levels.runAction(SKAction.fadeInWithDuration(0.21)) }
+        if levels.alpha < 1 { levels.run(SKAction.fadeIn(withDuration: 0.21)) }
         if chosen { return }
         if touches.count == 1 {
             let touch = touches.first!
-            let pos = touch.locationInNode(self)
+            let pos = touch.location(in: self)
             lastLevelPos = levels.position
             lastTouchPos = pos
         }
     }
     
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         if touches.count == 1 {
             scrollBegan = true
             let touch = touches.first!
-            let pos = touch.locationInNode(self)
+            let pos = touch.location(in: self)
             levels.position.y = pos.y - lastTouchPos.y + lastLevelPos.y
-            levels.position.y.clamp(366, 800)
+            _ = levels.position.y.clamp(366, 800)
         }
     }
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if scrollBegan {
             if touches.count == 1 {
                 scrollBegan = false
             }
         } else if touches.count == 1 {
             let touch = touches.first!
-            let pos = touch.locationInNode(self)
-            let node = nodeAtPoint(pos)
+            let pos = touch.location(in: self)
+            let node = atPoint(pos)
             if node.name == "unlockAll" {
                 buyProduct()
                 return
@@ -153,7 +154,7 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
             }
             for n in 1...levelNum {
                 if node.name == "level\(n)" || node.name == "level\(n)Area" {
-                    if n <= 15 || defaults.doubleForKey("best\(n)") < 10 || defaults.doubleForKey("best\(n - 1)") < 10  || defaults.boolForKey("unlockedAll") {
+                    if n <= 15 || defaults.double(forKey: "best\(n)") < 10 || defaults.double(forKey: "best\(n - 1)") < 10  || defaults.bool(forKey: "unlockedAll") {
                         
                         moveToLevelN(n, name: node.name!)
                         return
@@ -163,7 +164,7 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         }
     }
     
-    override func update(currentTime: NSTimeInterval) {
+    override func update(_ currentTime: TimeInterval) {
         if firstTimestamp < 0 {
             firstTimestamp = currentTime
         } else {
@@ -175,24 +176,24 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         if camera?.position.y == screenHeight * 1.5 {
             let skView = self.view as SKView!
             /* Sprite Kit applies additional optimizations to improve rendering performance */
-            skView.showsPhysics = showPhy
-            skView.ignoresSiblingOrder = true
+            skView?.showsPhysics = showPhy
+            skView?.ignoresSiblingOrder = true
             home.scaleMode = scaleMode
             home.anchorPoint.x = 0.5
             home.ballNode.removeAllActions()
-            home.ballNode.hidden = false
+            home.ballNode.isHidden = false
             home.ballNode.alpha = 1
             home.ballNode.position = home.startPos
-            home.ballNode.physicsBody?.dynamic = false
+            home.ballNode.physicsBody?.isDynamic = false
             self.home.playLabel.removeAllActions()
-            self.home.playLabel.runAction(SKAction.fadeInWithDuration(0.2))
-            skView.presentScene(home)
+            self.home.playLabel.run(SKAction.fadeIn(withDuration: 0.2))
+            skView?.presentScene(home)
             camera?.position.y = screenHeight / 2
         }
         
     }
     
-    func moveToLevelN(n: Int, name: String!) -> Void {
+    func moveToLevelN(_ n: Int, name: String!) -> Void {
         checkTimeScore()
         if refLevels[n] == nil { return }
         gameLevelNode.removeAllChildren()
@@ -203,18 +204,18 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         let skView = self.view as SKView!
         
         /* Sprite Kit applies additional optimizations to improve rendering performance */
-        skView.ignoresSiblingOrder = true
-        skView.showsPhysics = showPhy
-        skView.showsNodeCount = showNodes
+        skView?.ignoresSiblingOrder = true
+        skView?.showsPhysics = showPhy
+        skView?.showsNodeCount = showNodes
         
-        skView.presentScene(gameScene, transition: SKTransition.crossFadeWithDuration(0.7))
+        skView?.presentScene(gameScene, transition: SKTransition.crossFade(withDuration: 0.7))
         chosen = true
     }
     
-    func loadLevelN(n: Int) -> Void {
+    func loadLevelN(_ n: Int) -> Void {
         if refLevels[n] == nil {
-            if let path = NSBundle.mainBundle().pathForResource("Level\(n)", ofType: "sks") {
-                refLevels[n] = SKReferenceNode(URL: NSURL(fileURLWithPath: path))
+            if let path = Bundle.main.path(forResource: "Level\(n)", ofType: "sks") {
+                refLevels[n] = SKReferenceNode(url: URL(fileURLWithPath: path))
                 refLevels[n]!.name = "level\(n)"
             }
         }
@@ -223,14 +224,14 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
     func checkTimeScore() -> Void {
         var total: Double = 520
         for n in 1...levelNum {
-            let time = defaults.doubleForKey("best\(n)")
+            let time = defaults.double(forKey: "best\(n)")
             if time < 10 {
                 total -= 10
                 total += time
             }
         }
         totalTime = total
-        defaults.setDouble(total, forKey: "totalTime")
+        defaults.set(total, forKey: "totalTime")
         defaults.synchronize()
         
         //let change: dispatch_block_t = {}
@@ -239,11 +240,11 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         } else {
             self.bestTimeLabel.text = String(format: "%.3f", self.totalTime) + " seconds"
         }
-        bestTimeLabel.runAction(SKAction.fadeInWithDuration(0.23))
+        bestTimeLabel.run(SKAction.fadeIn(withDuration: 0.23))
     }
     
     func gameCenter() -> Void {
-        if GKLocalPlayer.localPlayer().authenticated {
+        if GKLocalPlayer.localPlayer().isAuthenticated {
             showLeaderBoard()
         } else {
             authPlayer()
@@ -253,10 +254,10 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
     func showLeaderBoard() -> Void {
         let viewController = self.view!.window?.rootViewController
         let gcvc = GKGameCenterViewController()
-        gcvc.viewState = GKGameCenterViewControllerState.Leaderboards
+        gcvc.viewState = GKGameCenterViewControllerState.leaderboards
         
         gcvc.gameCenterDelegate = self
-        viewController?.presentViewController(gcvc, animated: true, completion: nil)
+        viewController?.present(gcvc, animated: true, completion: nil)
     }
     
     func authPlayer() -> Void {
@@ -267,7 +268,7 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
             localPlayer.authenticateHandler = {
                 (view, error) in
                 if view != nil {
-                    self.view!.window?.rootViewController?.presentViewController(view!, animated: true, completion: nil)
+                    self.view!.window?.rootViewController?.present(view!, animated: true, completion: nil)
                 }
             }
         } else {
@@ -275,25 +276,25 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         }
     }
     
-    func gameCenterViewControllerDidFinish(gameCenterViewController: GKGameCenterViewController) {
-        gameCenterViewController.dismissViewControllerAnimated(true, completion: nil)
+    func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
+        gameCenterViewController.dismiss(animated: true, completion: nil)
     }
     
     func checkLevels() -> Void {
         let green = UIColor(red: 28 / 256, green: 242 / 256, blue: 118 / 256, alpha: 1)
-        self.bestTimeLabel.runAction(SKAction.fadeOutWithDuration(0.12))
+        self.bestTimeLabel.run(SKAction.fadeOut(withDuration: 0.12))
         for n in 1...levelNum {
-            let node = levels.childNodeWithName("level\(n)") as! SKLabelNode
-            var score = defaults.doubleForKey("best\(n)")
+            let node = levels.childNode(withName: "level\(n)") as! SKLabelNode
+            var score = defaults.double(forKey: "best\(n)")
             if score == 0 {
-                defaults.setDouble(10, forKey: "best\(n)")
+                defaults.set(10, forKey: "best\(n)")
                 defaults.synchronize()
                 score = 10
             }
             
             loadLevelN(n)
             
-            if defaults.boolForKey("passedAll") {
+            if defaults.bool(forKey: "passedAll") {
                 // passed all - UI
                 node.fontName = fontPass
                 node.fontColor = green
@@ -304,15 +305,15 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
                     node.fontColor = green
                 } else {
                     // locked UI
-                    if score == 10 && defaults.doubleForKey("best\(n - 1)") < 10 {
+                    if score == 10 && defaults.double(forKey: "best\(n - 1)") < 10 {
                         node.fontName = fontPass
-                        node.fontColor = UIColor.whiteColor()
+                        node.fontColor = UIColor.white
                     } else {
                         node.fontName = fontDefault
-                        node.fontColor = UIColor.whiteColor()
+                        node.fontColor = UIColor.white
                     }
                 }
-                if defaults.boolForKey("unlockedAll") || n <= 15 {
+                if defaults.bool(forKey: "unlockedAll") || n <= 15 {
                     // unlocked - UI
                     node.fontName = fontPass
                 }
@@ -321,24 +322,26 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
     }
     
     func restorePurchase() -> Void {
-        SKPaymentQueue.defaultQueue().addTransactionObserver(self)
-        SKPaymentQueue.defaultQueue().restoreCompletedTransactions()
+        SKPaymentQueue.default().add(self)
+        SKPaymentQueue.default().restoreCompletedTransactions()
         
         let vc = view?.window?.rootViewController
-        let alert = UIAlertController(title: "Restore purchase", message: "Your purchase has been restored!", preferredStyle: .Alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
-        vc?.presentViewController(alert, animated: true, completion: nil)
+        let alert = UIAlertController(title: "Restore purchase", message: "Your purchase has been restored!", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        vc?.present(alert, animated: true, completion: nil)
     }
     
-    func paymentQueueRestoreCompletedTransactionsFinished(queue: SKPaymentQueue) {
-        defaults.setBool(false, forKey: "unlockedAll")
+    func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
+        defaults.set(false, forKey: "unlockedAll")
         for transaction in queue.transactions {
-            print(transaction.error)
+            if let error = transaction.error {
+                print(error)
+            }
             let id = transaction.payment.productIdentifier
             print(id)
             if id == unlockId {
                 print("transaction restored")
-                defaults.setBool(true, forKey: "unlockedAll")
+                defaults.set(true, forKey: "unlockedAll")
                 checkLevels()
             }
         }
@@ -359,11 +362,11 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         print("buy " + p.productIdentifier)
         
         let payment = SKPayment(product: p)
-        SKPaymentQueue.defaultQueue().addTransactionObserver(self)
-        SKPaymentQueue.defaultQueue().addPayment(payment as SKPayment)
+        SKPaymentQueue.default().add(self)
+        SKPaymentQueue.default().add(payment as SKPayment)
     }
     
-    func productsRequest(request: SKProductsRequest, didReceiveResponse response: SKProductsResponse) {
+    func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         print("product request")
         
         for product in response.products {
@@ -377,24 +380,25 @@ class Level: SKScene, GKGameCenterControllerDelegate, SKProductsRequestDelegate,
         }
     }
     
-    func paymentQueue(queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+    func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
         print("add payment")
         
         for transaction in transactions {
-            print(transaction.error)
+            if let error = transaction.error {
+                print(error)
+            }
             switch transaction.transactionState {
-            case .Purchased:
+            case .purchased:
                 print("buy, unlocked")
                 print(p.productIdentifier)
-                defaults.setBool(true, forKey: "unlockedAll")
+                defaults.set(true, forKey: "unlockedAll")
                 checkLevels()
                 queue.finishTransaction(transaction)
-            case .Failed:
+            case .failed:
                 print("failed error")
                 queue.finishTransaction(transaction)
             default:
-                print("default")
-                print(transaction.transactionState)
+                print("default \(transaction.transactionState)")
                 break
             }
             

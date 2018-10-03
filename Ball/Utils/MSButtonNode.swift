@@ -9,7 +9,7 @@
 import SpriteKit
 
 enum MSButtonNodeState {
-    case MSButtonNodeStateActive, MSButtonNodeStateSelected, MSButtonNodeStateHidden
+    case msButtonNodeStateActive, msButtonNodeStateSelected, msButtonNodeStateHidden
 }
 
 class MSButtonNode: SKSpriteNode {
@@ -23,13 +23,13 @@ class MSButtonNode: SKSpriteNode {
     }
     
     /* Button state management */
-    var state: MSButtonNodeState = .MSButtonNodeStateActive {
+    var state: MSButtonNodeState = .msButtonNodeStateActive {
         didSet {
             switch state {
-            case .MSButtonNodeStateActive:
+            case .msButtonNodeStateActive:
                 /* Enable touch */
                 break
-            case .MSButtonNodeStateSelected:
+            case .msButtonNodeStateSelected:
                 // become larger
                 break
             default:
@@ -45,15 +45,15 @@ class MSButtonNode: SKSpriteNode {
         super.init(coder: aDecoder)
         
         /* Enable touch on button node */
-        self.userInteractionEnabled = true
+        self.isUserInteractionEnabled = true
     }
     
     override init(texture: SKTexture?, color: UIColor, size: CGSize) {
         super.init(texture: texture, color: color, size: size)
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        state = .MSButtonNodeStateSelected
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        state = .msButtonNodeStateSelected
         clickable = true
         longTouched = false
         if let name = self.name {
@@ -65,18 +65,18 @@ class MSButtonNode: SKSpriteNode {
         }
     }
     
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         clickable = false
     }
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if clickable {
             if !longTouched {
                 if let scene = self.scene as? GameScene {
                     scene.objIconTouchBeganTime = nil
                 }
                 selectedHandler()
-                state = .MSButtonNodeStateActive
+                state = .msButtonNodeStateActive
             }
         }
     }
@@ -85,25 +85,25 @@ class MSButtonNode: SKSpriteNode {
         clickable = false
         if let scene = self.scene as? GameScene {
             if !scene.touched {
-                if scene.state == .Ready &&
-                    (scene.tutorialState == .Done || scene.tutorialState == .IconLongPress) {
+                if scene.state == .ready &&
+                    (scene.tutorialState == .done || scene.tutorialState == .iconLongPress) {
                     // iconLongPressAction
-                    scene.nowNode.runAction(SKAction(named: "moveToCenter")!)
+                    scene.nowNode.run(SKAction(named: "moveToCenter")!)
                     scene.lastTouchNodeLocation = CGPoint(x: screenWidth / 2, y: 384)
                     let scale = SKAction.afterDelay(0.4, performAction: SKAction(named: "scaleToFocus")!)
-                    scale.timingMode = SKActionTimingMode.EaseInEaseOut
-                    scene.nowNode.runAction(scale)
+                    scale.timingMode = SKActionTimingMode.easeInEaseOut
+                    scene.nowNode.run(scale)
                     scene.longPressObjIconUpdateRF = true
                     
                     if scene.functionNode.alpha != 0 {
-                        scene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                        scene.functionNode.run(SKAction(named: "fadeOut")!)
                     }
                     if scene.rotationNode.alpha != 0 {
-                        scene.rotationNode.runAction(SKAction(named: "fadeOut")!)
+                        scene.rotationNode.run(SKAction(named: "fadeOut")!)
                     }
                     
-                    if scene.tutorialState == .IconLongPress {
-                        scene.tutorialLayerBg?.runAction(SKAction.fadeOutWithDuration(0.32))
+                    if scene.tutorialState == .iconLongPress {
+                        scene.tutorialLayerBg?.run(SKAction.fadeOut(withDuration: 0.32))
                         scene.popLastTutorialState()
                     }
                 }

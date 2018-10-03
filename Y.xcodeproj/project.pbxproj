@@ -232,10 +232,10 @@
 				000AB5D01D302F0500D75C33 /* AppDelegate.swift */,
 				009E448B1D3030A600F8B596 /* GameViewController.swift */,
 				009E44A31D3030E400F8B596 /* sks */,
-				000AB5D81D302F0500D75C33 /* Main.storyboard */,
 				009E44A41D30310300F8B596 /* swifts */,
-				000AB5DB1D302F0500D75C33 /* Assets.xcassets */,
 				00C60DB31D30417B00BF262D /* Utils */,
+				000AB5DB1D302F0500D75C33 /* Assets.xcassets */,
+				000AB5D81D302F0500D75C33 /* Main.storyboard */,
 				000AB5DD1D302F0500D75C33 /* LaunchScreen.storyboard */,
 				000AB5E01D302F0500D75C33 /* Info.plist */,
 			);
@@ -414,12 +414,13 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0730;
-				LastUpgradeCheck = 0730;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = Yuchao;
 				TargetAttributes = {
 					000AB5CC1D302F0500D75C33 = {
 						CreatedOnToolsVersion = 7.3.1;
-						DevelopmentTeam = Z27YUCTD32;
+						DevelopmentTeam = NZ5AAS7835;
+						LastSwiftMigration = 0810;
 						SystemCapabilities = {
 							com.apple.InAppPurchase = {
 								enabled = 1;
@@ -590,8 +591,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -636,8 +639,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -656,6 +661,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -666,11 +672,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = NZ5AAS7835;
 				INFOPLIST_FILE = Ball/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yuchao.Y-Drop-the-Ball";
+				PRODUCT_BUNDLE_IDENTIFIER = com.yuchao.yucpuzzle;
 				PRODUCT_NAME = Y;
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				"Texture Atlas Maximum Size" = 4096x4096;
 			};
@@ -681,11 +689,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = NZ5AAS7835;
 				INFOPLIST_FILE = Ball/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yuchao.Y-Drop-the-Ball";
+				PRODUCT_BUNDLE_IDENTIFIER = com.yuchao.yucpuzzle;
 				PRODUCT_NAME = Y;
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				"Texture Atlas Maximum Size" = 4096x4096;
 			};

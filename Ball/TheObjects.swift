@@ -10,30 +10,30 @@ import SpriteKit
 
 class TheObjects: SKSpriteNode {
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
-            if gameScene.state == .Ready && gameScene.tutorialState == .Done {
+            if gameScene.state == .ready && gameScene.tutorialState == .done {
                 if touches.count == 1 {
                     if self.parent?.name != nil {
-                        gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
-                        gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                        gameScene.rotationNode.run(SKAction(named: "fadeOut")!)
+                        gameScene.functionNode.run(SKAction(named: "fadeOut")!)
                         if gameScene.nowNode != self.parent! {
                             gameScene.nowNode = self.parent!
-                            gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
+                            gameScene.objIconNode.run(SKAction(named: "scaleToFocus")!)
                         }
                     }
                 }
-            } else if gameScene.tutorialState == .TapBounce {
+            } else if gameScene.tutorialState == .tapBounce {
                 if touches.count == 1 {
                     let touch = touches.first!
-                    let node = nodeAtPoint(touch.locationInNode(self)).parent
+                    let node = atPoint(touch.location(in: self)).parent
                     if let name = node?.name {
                         if name == "bounce" {
                             node?.removeFromParent()
                             gameScene.popLastTutorialState()
-                            gameScene.tutorialLayerBg?.runAction(SKAction.fadeOutWithDuration(0.23))
-                            gameScene.nowNode = gameScene.childNodeWithName("//bounce")!
-                            gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
+                            gameScene.tutorialLayerBg?.run(SKAction.fadeOut(withDuration: 0.23))
+                            gameScene.nowNode = gameScene.childNode(withName: "//bounce")!
+                            gameScene.objIconNode.run(SKAction(named: "scaleToFocus")!)
                         }
                     }
                 }
@@ -41,17 +41,17 @@ class TheObjects: SKSpriteNode {
         }
     }
     
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
             if gameScene.nowNode == self.parent! {
-                if gameScene.state == .Ready && gameScene.tutorialState == .Done {
+                if gameScene.state == .ready && gameScene.tutorialState == .done {
                     if touches.count == 1 {
                         gameScene.disableMultiTouch()
-                        gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
-                        gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                        gameScene.rotationNode.run(SKAction(named: "fadeOut")!)
+                        gameScene.functionNode.run(SKAction(named: "fadeOut")!)
                         for touch in touches {
                             // self.parent!.parent!.parent is the SKReferenceNode in GameScene
-                            self.parent!.position = touch.locationInNode(self.parent!.parent!)
+                            self.parent!.position = touch.location(in: self.parent!.parent!)
                         }
                     }
                 }
@@ -59,14 +59,14 @@ class TheObjects: SKSpriteNode {
         }
     }
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
             if gameScene.nowNode == self.parent! {
-                if gameScene.state == .Ready && gameScene.tutorialState == .Done {
+                if gameScene.state == .ready && gameScene.tutorialState == .done {
                     if touches.count == 1 {
                         for touch in touches {
                             gameScene.lastTouchNodeLocation = self.parent!.position
-                            gameScene.lastTouchLocation = touch.locationInNode(gameScene)
+                            gameScene.lastTouchLocation = touch.location(in: gameScene)
                             gameScene.updateRF()
                         }
                     }
@@ -78,7 +78,7 @@ class TheObjects: SKSpriteNode {
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        userInteractionEnabled = true
+        isUserInteractionEnabled = true
     }
 
 }

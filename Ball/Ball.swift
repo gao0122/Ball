@@ -12,31 +12,31 @@ class Ball: SKSpriteNode {
     
     let objName = "The ball"
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
-            if gameScene.state == .Ready && gameScene.tutorialState == .Done {
+            if gameScene.state == .ready && gameScene.tutorialState == .done {
                 if touches.count == 1 {
-                    gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
-                    gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                    gameScene.rotationNode.run(SKAction(named: "fadeOut")!)
+                    gameScene.functionNode.run(SKAction(named: "fadeOut")!)
                     if gameScene.nowNode != self {
                         gameScene.nowNode = self
-                        gameScene.objIconNode.runAction(SKAction(named: "scaleToFocus")!)
+                        gameScene.objIconNode.run(SKAction(named: "scaleToFocus")!)
                     }
                 }
             }
         }
     }
     
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
             if gameScene.nowNode == self {
-                if gameScene.state == .Ready && gameScene.tutorialState == .Done {
+                if gameScene.state == .ready && gameScene.tutorialState == .done {
                     if touches.count == 1 {
                         gameScene.disableMultiTouch()
-                        gameScene.rotationNode.runAction(SKAction(named: "fadeOut")!)
-                        gameScene.functionNode.runAction(SKAction(named: "fadeOut")!)
+                        gameScene.rotationNode.run(SKAction(named: "fadeOut")!)
+                        gameScene.functionNode.run(SKAction(named: "fadeOut")!)
                         for touch in touches {
-                            self.position = touch.locationInNode(gameScene)
+                            self.position = touch.location(in: gameScene)
                         }
                     }
                 }
@@ -44,14 +44,14 @@ class Ball: SKSpriteNode {
         }
     }
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let gameScene = self.scene as? GameScene {
             if gameScene.nowNode == self {
-                if gameScene.state == .Ready && gameScene.tutorialState == .Done {
+                if gameScene.state == .ready && gameScene.tutorialState == .done {
                     if touches.count == 1 {
                         for touch in touches {
                             gameScene.lastTouchNodeLocation = position
-                            gameScene.lastTouchLocation = touch.locationInNode(gameScene)
+                            gameScene.lastTouchLocation = touch.location(in: gameScene)
                             gameScene.updateRF()
                         }
                     }
@@ -63,7 +63,7 @@ class Ball: SKSpriteNode {
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        userInteractionEnabled = true
+        isUserInteractionEnabled = true
     }
     
 }

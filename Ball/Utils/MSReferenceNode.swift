@@ -13,9 +13,9 @@ class MSReferenceNode: SKReferenceNode {
     /* Avatar node connection */
     var obj: SKSpriteNode!
     
-    override func didLoadReferenceNode(node: SKNode?) {
+    override func didLoad(_ node: SKNode?) {
         
         /* Set reference to avatar node */
-        obj = childNodeWithName("//obj") as! SKSpriteNode
+        obj = childNode(withName: "//obj") as! SKSpriteNode
     }
 }

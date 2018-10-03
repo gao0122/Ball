@@ -9,6 +9,31 @@
 import SpriteKit
 import GameKit
 
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+    switch (lhs, rhs) {
+    case let (l?, r?):
+        return l < r
+    case (nil, _?):
+        return true
+    default:
+        return false
+    }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+    switch (lhs, rhs) {
+    case let (l?, r?):
+        return l > r
+    default:
+        return rhs < lhs
+    }
+}
+
+
 let levelNum = 52
 let screenHeight: CGFloat = 667
 let screenWidth: CGFloat = 375
@@ -17,9 +42,9 @@ let gcWorld = "worldBest"
 class Home: SKScene, GKGameCenterControllerDelegate {
     
     let startPos = CGPoint(x: 231, y: 555)
-    let loadTime: NSTimeInterval = 4 // 4 seconds for loading the game
+    let loadTime: TimeInterval = 4 // 4 seconds for loading the game
     
-    var defaults: NSUserDefaults!
+    var defaults: UserDefaults!
     var level: Level! = Level(fileNamed: "Level") as Level!
     var gameScene: GameScene! = GameScene(fileNamed: "GameScene") as GameScene!
     
@@ -41,36 +66,36 @@ class Home: SKScene, GKGameCenterControllerDelegate {
         }
     }
     
-    var waitDelayAtBegin: NSTimeInterval = 0.4
+    var waitDelayAtBegin: TimeInterval = 0.4
     var dropping = false
     var musicSet = false
     var firstTimestampBool = true
-    var firstTimestamp: NSTimeInterval = 0
+    var firstTimestamp: TimeInterval = 0
     var nameShown = false
     
-    override func didMoveToView(view: SKView) {
+    override func didMove(to view: SKView) {
         
-        NSLocale.preferredLanguages()
+        // Locale.preferredLanguages
         
-        defaults = NSUserDefaults.standardUserDefaults()
+        defaults = UserDefaults.standard
         waitDelayAtBegin = ballNode == nil ? loadTime : 0.4
         
-        if !defaults.boolForKey("notGcPlayer") {
-            defaults.setBool(true, forKey: "notGcPlayer")
+        if !defaults.bool(forKey: "notGcPlayer") {
+            defaults.set(true, forKey: "notGcPlayer")
             defaults.synchronize()
             authPlayer()
         }
 
-        springSys = childNodeWithName("springSys")!
-        ballNode = ballNode == nil ? springSys.childNodeWithName("ball") as! SKSpriteNode : ballNode
-        radialBall = springSys.childNodeWithName("radialBall") as! SKSpriteNode
-        ropeNode = ballNode.childNodeWithName("rope") as! SKSpriteNode
-        springField = radialBall.childNodeWithName("springField") as! SKFieldNode
-        playLabel = childNodeWithName("playLabel") as! SKLabelNode
-        playerName = childNodeWithName("playerName") as! SKLabelNode
+        springSys = childNode(withName: "springSys")!
+        ballNode = ballNode == nil ? springSys.childNode(withName: "ball") as! SKSpriteNode : ballNode
+        radialBall = springSys.childNode(withName: "radialBall") as! SKSpriteNode
+        ropeNode = ballNode.childNode(withName: "rope") as! SKSpriteNode
+        springField = radialBall.childNode(withName: "springField") as! SKFieldNode
+        playLabel = childNode(withName: "playLabel") as! SKLabelNode
+        playerName = childNode(withName: "playerName") as! SKLabelNode
         
-        level.childNodeWithName("scrollUp")?.zPosition = -5
-        if let levels = level.levels { levels.hidden = true }
+        level.childNode(withName: "scrollUp")?.zPosition = -5
+        if let levels = level.levels { levels.isHidden = true }
         
         if gameScene.home == nil { gameScene.home = self }
         if gameScene.level == nil { gameScene.level = level }
@@ -79,9 +104,9 @@ class Home: SKScene, GKGameCenterControllerDelegate {
         var totalTime: Double = 520
         for n in 1...levelNum {
             let board = GKLeaderboard()
-            board.timeScope = .AllTime
+            board.timeScope = .allTime
             board.identifier = "level\(n)"
-            board.loadScoresWithCompletionHandler { (score : [GKScore]?, error:NSError?) -> Void in
+            board.loadScores { (score : [GKScore]?, error:Error?) -> Void in
                 if error != nil {
                 } else {
                     if let score = board.localPlayerScore {
@@ -89,7 +114,7 @@ class Home: SKScene, GKGameCenterControllerDelegate {
                         let time = Double(score.value) / 1000
                         totalTime -= 10
                         totalTime += time
-                        self.defaults.setDouble(time, forKey: "best\(n)")
+                        self.defaults.set(time, forKey: "best\(n)")
                         self.defaults.synchronize()
                     }
                 }
@@ -100,34 +125,34 @@ class Home: SKScene, GKGameCenterControllerDelegate {
         dropping = false
         firstTimestamp = 0
         firstTimestampBool = true
-        springField.enabled = true
+        springField.isEnabled = true
         ballNode.alpha = 1
         ballNode.position = startPos
         ballNode.physicsBody?.mass = 0.7
         ballNode.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-        ballNode.physicsBody?.dynamic = false
+        ballNode.physicsBody?.isDynamic = false
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if dropping && touches.count == 1 {
-            springField.enabled = !springField.enabled
+            springField.isEnabled = !springField.isEnabled
         }
     }
     
-    override func update(currentTime: NSTimeInterval) {
+    override func update(_ currentTime: TimeInterval) {
         if !nameShown && GKLocalPlayer.localPlayer().playerID != nil {
             if let alias = GKLocalPlayer.localPlayer().alias {
                 let len = CGFloat(alias.characters.count)
                 playerName.text = alias
                 playerName.fontSize = 700 / len
                 while playerName.frame.width > 300 { playerName.fontSize = playerName.fontSize - 7 }
-                playerName.runAction(SKAction.fadeInWithDuration(0.48))
+                playerName.run(SKAction.fadeIn(withDuration: 0.48))
             }
             nameShown = true
         }
         let dy = startPos.y - ballNode.position.y
         ropeNode.xScale = 1 - (dy + 40) / 2000
-        ropeNode.xScale.clamp(0.37, 1)
+        let _ = ropeNode.xScale.clamp(0.37, 1)
         
         if firstTimestampBool {
             firstTimestamp = currentTime
@@ -135,39 +160,39 @@ class Home: SKScene, GKGameCenterControllerDelegate {
         }
         if firstTimestamp > 0 && currentTime - firstTimestamp > waitDelayAtBegin && !dropping {
             if playerName.alpha < 1 {
-                playerName.runAction(SKAction.fadeInWithDuration(0.28))
+                playerName.run(SKAction.fadeIn(withDuration: 0.28))
             }
 
-            if GKLocalPlayer.localPlayer().authenticated {
-                defaults.setBool(false, forKey: "notGcPlayer")
+            if GKLocalPlayer.localPlayer().isAuthenticated {
+                defaults.set(false, forKey: "notGcPlayer")
                 defaults.synchronize()
             }
-            ballNode.physicsBody?.dynamic = true
+            ballNode.physicsBody?.isDynamic = true
             dropping = true
         }
         if dropping {
             if let camera = camera {
                 camera.position = CGPoint(x: camera.position.x, y: ballNode.position.y)
-                camera.position.y.clamp(screenHeight / 2, -screenHeight / 2)
+                let _ = camera.position.y.clamp(screenHeight / 2, -screenHeight / 2)
                 if ballNode.physicsBody?.velocity.dy > 0 {
-                    ballNode.runAction(SKAction.fadeInWithDuration(0.6))
-                    playLabel.runAction(SKAction.fadeInWithDuration(0.6))
+                    ballNode.run(SKAction.fadeIn(withDuration: 0.6))
+                    playLabel.run(SKAction.fadeIn(withDuration: 0.6))
                 } else if ballNode.physicsBody?.velocity.dy < 0 {
-                    let dtime = NSTimeInterval((ballNode.position.y + screenHeight / 2) / -ballNode.physicsBody!.velocity.dy)
-                    let dptime = NSTimeInterval((ballNode.position.y - 100) / -ballNode.physicsBody!.velocity.dy)
-                    ballNode.runAction(SKAction.fadeOutWithDuration(dtime))
-                    playLabel.runAction(SKAction.fadeOutWithDuration(dptime))
+                    let dtime = TimeInterval((ballNode.position.y + screenHeight / 2) / -ballNode.physicsBody!.velocity.dy)
+                    let dptime = TimeInterval((ballNode.position.y - 100) / -ballNode.physicsBody!.velocity.dy)
+                    ballNode.run(SKAction.fadeOut(withDuration: dtime))
+                    playLabel.run(SKAction.fadeOut(withDuration: dptime))
                 }
                 
                 if ballNode.position.y < -screenHeight / 2 - 50 {
-                    ballNode.hidden = true
+                    ballNode.isHidden = true
                     ballNode.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
                     ballNode.position = startPos
 
                     let skView = self.view as SKView!
                     
                     /* Sprite Kit applies additional optimizations to improve rendering performance */
-                    skView.ignoresSiblingOrder = true
+                    skView?.ignoresSiblingOrder = true
                     
                     /* Set the scale mode to scale to fit the window */
                     level.scaleMode = scaleMode
@@ -178,11 +203,11 @@ class Home: SKScene, GKGameCenterControllerDelegate {
                     if level.gameScene == nil { level.gameScene = gameScene }
                     
                     camera.position.y = screenHeight / 2
-                    skView.presentScene(level)
+                    skView?.presentScene(level)
                 }
                 
                 springField.strength += arc4random_uniform(2) == 0 ? 0.1 : -0.1
-                springField.strength.clamp(5.6, 6.6)
+                let _ = springField.strength.clamp(5.6, 6.6)
             }
         }
     }
@@ -192,13 +217,13 @@ class Home: SKScene, GKGameCenterControllerDelegate {
         localPlayer.authenticateHandler = {
             (view, error) in
             if view != nil {
-                self.view!.window?.rootViewController?.presentViewController(view!, animated: true, completion: nil)
+                self.view!.window?.rootViewController?.present(view!, animated: true, completion: nil)
             }
         }
     }
     
-    func gameCenterViewControllerDidFinish(gameCenterViewController: GKGameCenterViewController) {
-        gameCenterViewController.dismissViewControllerAnimated(true, completion: nil)
+    func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
+        gameCenterViewController.dismiss(animated: true, completion: nil)
     }
     
 }
